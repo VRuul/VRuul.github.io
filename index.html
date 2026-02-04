@@ -75,7 +75,6 @@
             transition: opacity 0.5s;
         }
 
-        /* Título inicial (HTML) que desaparecerá */
         h1 {
             font-size: 3.5rem;
             font-weight: 300;
@@ -88,8 +87,6 @@
         .fade-out {
             opacity: 0;
         }
-
-        /* Clase para ocultar texto HTML */
 
         p {
             font-size: 1.2rem;
@@ -104,6 +101,37 @@
             color: #ff69b4;
             font-weight: bold;
             min-height: 20px;
+        }
+
+        /* --- Instrucciones Fijas Inferiores --- */
+        .instruction-bar {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .instruction-text {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 25px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .instruction-text span {
+            color: #ff69b4;
+            font-weight: bold;
         }
 
         .btn-cam {
@@ -122,47 +150,21 @@
             display: none;
         }
 
-        /* Botón de Propuesta */
-        .btn-proposal {
-            display: none;
-            /* Se muestra con JS */
-            position: absolute;
-            /* Posición absoluta para no depender del flujo del texto oculto */
-            bottom: 15%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 50px;
-            background: rgba(255, 60, 100, 0.2);
-            border: 2px solid #ff3366;
-            color: white;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-radius: 50px;
-            cursor: pointer;
-            pointer-events: auto;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            font-size: 1.2rem;
-            text-decoration: none;
-            z-index: 100;
-            box-shadow: 0 0 20px rgba(255, 60, 100, 0.3);
-        }
-
-        .btn-proposal:hover {
-            background: rgba(255, 60, 100, 0.8);
-            box-shadow: 0 0 40px rgba(255, 60, 100, 0.8);
-            transform: translateX(-50%) scale(1.1);
-        }
-
         @media (max-width: 768px) {
             h1 {
                 font-size: 2rem;
             }
 
-            .btn-proposal {
-                bottom: 10%;
-                padding: 12px 30px;
-                font-size: 1rem;
+            .instruction-text {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+                width: 90%;
+            }
+
+            .camera-preview {
+                width: 100px;
+                height: 75px;
+                bottom: 90px;
             }
         }
     </style>
@@ -176,15 +178,19 @@
         <video id="input_video"></video>
     </div>
 
+    <!-- Barra de Instrucciones Fija -->
+    <div class="instruction-bar">
+        <div class="instruction-text" id="instructionText">
+            Acerca tu mano para <span>despertar el corazón</span>
+        </div>
+    </div>
+
     <div class="content" id="uiContent">
         <p>Experiencia Interactiva</p>
-        <h1 id="mainTitle">Haz el gesto ❤️</h1>
+        <h1 id="mainTitle">Bienvenido</h1>
         <p class="status-msg" id="statusMsg">Solicitando acceso a la cámara...</p>
         <button class="btn-cam" id="btnRetry" onclick="startCamera()">Intentar de nuevo</button>
     </div>
-
-    <!-- Botón fuera del contenedor 'content' para posicionarlo libremente -->
-    <a href="#" id="btnYes" class="btn-proposal" onclick="celebrar(event)">¡Sí, acepto!</a>
 
     <script>
         const canvas = document.getElementById('canvas1');
@@ -195,12 +201,12 @@
         let particlesArray = [];
         let heartSizeScale = Math.min(canvas.width, canvas.height) / 400;
 
-        // Arrays de destinos (Targets)
-        let heartTargets = [];
-        let textTargets = [];
+        // Estados
+        let isHandsDetected = false;
+        let isHandOpen = false; // Pregunta
+        let isThumbsUp = false; // Respuesta
+        let isFingerHeart = false; // EASTER EGG (BTS)
 
-        // Estado
-        let isHeartFormed = false;
         let angleY = 0;
         const perspective = 800;
         const mouse = { x: null, y: null, radius: 150 };
@@ -210,7 +216,7 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             heartSizeScale = Math.min(canvas.width, canvas.height) / 400;
-            initSystem(); // Recalcular todo
+            initSystem();
         });
 
         // --- 1. Generar Puntos del Corazón ---
@@ -218,18 +224,12 @@
             let points = [];
             for (let i = 0; i < count; i++) {
                 let t = Math.random() * Math.PI * 2;
-                // Fórmula del corazón
                 let x = 16 * Math.pow(Math.sin(t), 3);
                 let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-                // Relleno aleatorio
                 let r = Math.sqrt(Math.random());
-
-                // Posición 3D
-                // Offset Y (+100) para bajar el corazón y dejar espacio al texto
                 let tx = x * r * 15 * heartSizeScale;
-                let ty = (y * r * 15 * heartSizeScale) + (canvas.height * 0.15);
-
+                let ty = y * r * 15 * heartSizeScale;
                 let thickness = 10 * heartSizeScale * (1 - r * 0.5);
                 let tz = (Math.random() - 0.5) * thickness * 30;
 
@@ -238,137 +238,156 @@
             return points;
         }
 
-        // --- 2. Generar Puntos de Texto (Rasterización) ---
-        function calculateTextTargets() {
+        // --- 2. Generar Puntos de Texto ---
+        function calculateTextTargets(textContent) {
             let points = [];
-
-            // FIX: Validar que el canvas tenga dimensiones antes de intentar leer píxeles
-            // Esto previene el error 'IndexSizeError'
             if (canvas.width <= 0 || canvas.height <= 0) return points;
 
-            // Usamos un canvas temporal pequeño para no saturar la CPU
-            // Si la pantalla es muy grande, limitamos el tamaño de escaneo
-            const fontSize = Math.min(canvas.width * 0.12, 100); // Tamaño adaptable
+            const fontSize = Math.min(canvas.width * 0.12, 100);
             ctx.font = `900 ${fontSize}px Verdana`;
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Texto a escribir
-            const text = "¿QUIERES SER\nMI SAN VALENTÍN?";
-            const lines = text.split('\n');
+            const lines = textContent.split('\n');
             const lineHeight = fontSize * 1.1;
 
-            // Dibujar texto en el canvas principal momentáneamente para escanearlo
-            // Limpiamos un área
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Posición Y del texto (arriba del centro)
-            let startY = canvas.height * 0.3;
+            let startY = canvas.height * 0.4;
 
             lines.forEach((line, i) => {
                 ctx.fillText(line, canvas.width / 2, startY + (i * lineHeight));
             });
 
-            // Escanear píxeles
-            // gap: saltar píxeles para no tener millones de puntos (rendimiento)
-            const gap = 3;
-
+            const gap = 4;
             try {
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imgData.data;
-
                 for (let y = 0; y < canvas.height; y += gap) {
                     for (let x = 0; x < canvas.width; x += gap) {
-                        // Chequear canal Alpha (data[i+3]) > 128 (pixel visible)
-                        const index = (y * canvas.width + x) * 4;
-                        if (data[index + 3] > 128) {
-                            // Coordenadas relativas al centro para el sistema 3D
-                            // x - center, y - center
+                        if (data[(y * canvas.width + x) * 4 + 3] > 128) {
                             points.push({
                                 x: x - canvas.width / 2,
                                 y: y - canvas.height / 2,
-                                z: 0 // El texto es plano (2D)
+                                z: 0
                             });
                         }
                     }
                 }
-            } catch (e) {
-                console.warn("No se pudo leer el canvas aun:", e);
-                return points;
-            }
-
-            // Limpiar canvas después de escanear
+            } catch (e) { return points; }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             return points;
         }
 
         // --- Clase Partícula ---
         class Particle {
-            constructor(target) {
-                // Destino (Forma)
-                this.tx = target.x;
-                this.ty = target.y;
-                this.tz = target.z;
-                this.isText = (target.z === 0); // Bandera simple para saber si es texto
+            constructor(heartTarget, questionTarget, answerTarget, btsTarget) {
+                // Objetivo Corazón
+                this.hx = heartTarget ? heartTarget.x : (Math.random() - 0.5) * canvas.width;
+                this.hy = heartTarget ? heartTarget.y : (Math.random() - 0.5) * canvas.height;
+                this.hz = heartTarget ? heartTarget.z : (Math.random() - 0.5) * 500;
 
-                // Origen (Disperso)
-                this.x = (Math.random() - 0.5) * canvas.width * 1.5;
-                this.y = (Math.random() - 0.5) * canvas.height * 1.5;
-                this.z = (Math.random() - 0.5) * 1000;
+                // Objetivo Pregunta
+                this.qx = questionTarget ? questionTarget.x : this.hx;
+                this.qy = questionTarget ? questionTarget.y : this.hy;
+                this.qz = questionTarget ? questionTarget.z : this.hz;
+                this.hasQTarget = !!questionTarget;
 
-                // Velocidad caótica
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
+                // Objetivo Respuesta
+                this.ax = answerTarget ? answerTarget.x : this.hx;
+                this.ay = answerTarget ? answerTarget.y : this.hy;
+                this.az = answerTarget ? answerTarget.z : this.hz;
+                this.hasATarget = !!answerTarget;
+
+                // Objetivo BTS (Easter Egg)
+                this.bx = btsTarget ? btsTarget.x : this.hx;
+                this.by = btsTarget ? btsTarget.y : this.hy;
+                this.bz = btsTarget ? btsTarget.z : this.hz;
+                this.hasBTarget = !!btsTarget;
+
+                // Posición Dispersa Base
+                this.dx = (Math.random() - 0.5) * canvas.width * 1.5;
+                this.dy = (Math.random() - 0.5) * canvas.height * 1.5;
+                this.dz = (Math.random() - 0.5) * 1000;
+
+                // Iniciar en posición dispersa
+                this.x = this.dx;
+                this.y = this.dy;
+                this.z = this.dz;
 
                 this.sizeBase = Math.random() * 2 + 0.5;
-                // Color: Si es texto, más blanco/brillante. Si es corazón, rosa/rojo.
-                this.colorHue = this.isText ? Math.random() * 20 + 340 : Math.random() * 40 + 330;
-                this.saturation = this.isText ? '20%' : '80%';
-                this.lightness = this.isText ? '90%' : '60%';
+                this.colorHue = Math.random() * 40 + 330;
+                this.saturation = '80%';
+                this.lightness = '60%';
             }
 
             draw(scale, screenX, screenY) {
                 let alpha = scale * 0.8;
-                ctx.fillStyle = `hsla(${this.colorHue}, ${this.saturation}, ${this.lightness}, ${alpha})`;
+                let l = this.lightness;
+                let s = this.saturation;
+                let h = this.colorHue;
+
+                if (isFingerHeart && this.hasBTarget) {
+                    // BTS Mode: Púrpura brillante
+                    h = 270; s = '100%'; l = '65%';
+                } else if (isThumbsUp && this.hasATarget) {
+                    h = 350; s = '100%'; l = '70%';
+                } else if (isHandOpen && this.hasQTarget) {
+                    l = '90%'; s = '20%';
+                }
+
+                ctx.fillStyle = `hsla(${h}, ${s}, ${l}, ${alpha})`;
                 ctx.beginPath();
                 ctx.arc(screenX, screenY, this.sizeBase * scale, 0, Math.PI * 2);
                 ctx.fill();
             }
 
             update() {
-                if (isHeartFormed) {
-                    // Ir al destino
-                    this.x += (this.tx - this.x) * 0.08; // Un poco más rápido
-                    this.y += (this.ty - this.y) * 0.08;
-                    this.z += (this.tz - this.z) * 0.08;
+                let tx, ty, tz;
 
-                    // Pequeña vibración para que se vea "vivo"
-                    this.x += (Math.random() - 0.5) * 0.5;
-                    this.y += (Math.random() - 0.5) * 0.5;
+                if (!isHandsDetected) {
+                    tx = this.dx; ty = this.dy; tz = this.dz;
+                } else if (isFingerHeart) {
+                    // MODO BTS
+                    if (this.hasBTarget) {
+                        tx = this.bx; ty = this.by; tz = this.bz;
+                    } else {
+                        tx = this.hx * 2; ty = this.hy * 2; tz = this.hz;
+                    }
+                } else if (isThumbsUp) {
+                    // MODO RESPUESTA
+                    if (this.hasATarget) {
+                        tx = this.ax; ty = this.ay; tz = this.az;
+                    } else {
+                        tx = this.hx * 2; ty = this.hy * 2; tz = this.hz;
+                    }
+                } else if (isHandOpen) {
+                    // MODO PREGUNTA
+                    if (this.hasQTarget) {
+                        tx = this.qx; ty = this.qy; tz = this.qz;
+                    } else {
+                        tx = this.hx * 2; ty = this.hy * 2; tz = this.hz;
+                    }
                 } else {
-                    // Flotar
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    if (this.x > canvas.width || this.x < -canvas.width) this.vx *= -1;
-                    if (this.y > canvas.height || this.y < -canvas.height) this.vy *= -1;
+                    // NEUTRO
+                    tx = this.hx; ty = this.hy; tz = this.hz;
                 }
 
-                // Proyección 3D
-                // Solo rotamos si es parte del corazón (opcional), aquí rotamos todo muy sutil
-                // Para mantener el texto legible, NO rotamos angleY dramáticamente
+                this.x += (tx - this.x) * 0.08;
+                this.y += (ty - this.y) * 0.08;
+                this.z += (tz - this.z) * 0.08;
+
+                this.x += (Math.random() - 0.5) * 0.5;
+                this.y += (Math.random() - 0.5) * 0.5;
 
                 let cos = Math.cos(angleY);
                 let sin = Math.sin(angleY);
-
-                // Rotación en Y
                 let rx = this.x * cos - this.z * sin;
                 let rz = this.x * sin + this.z * cos;
-                let ry = this.y;
 
                 let scale = perspective / (perspective + rz + 1000);
                 let screenX = rx * scale + canvas.width / 2;
-                let screenY = ry * scale + canvas.height / 2;
+                let screenY = this.y * scale + canvas.height / 2;
 
                 this.draw(scale, screenX, screenY);
             }
@@ -377,129 +396,153 @@
         function initSystem() {
             particlesArray = [];
 
-            // 1. Calcular puntos del texto
-            let txtPoints = calculateTextTargets();
-            // 2. Calcular puntos del corazón (aproximadamente 2500)
-            let hrtPoints = calculateHeartTargets(2500);
+            let questionPoints = calculateTextTargets("¿QUIERES SER\nMI SAN VALENTÍN?");
+            let answerPoints = calculateTextTargets("TE AMO\n❤");
+            let btsPoints = calculateTextTargets("I PURPLE YOU\n💜"); // Easter Egg Text
 
-            // Crear partículas para Texto
-            // Si hay demasiados puntos de texto, reducimos aleatoriamente para rendimiento
-            // Si hay pocos, se usan todos.
-            txtPoints.forEach(pt => {
-                // A veces saltamos puntos si hay demasiados (optimización móvil)
-                if (Math.random() > 0.3) {
-                    particlesArray.push(new Particle(pt));
-                }
-            });
+            let maxCount = Math.max(questionPoints.length, answerPoints.length, btsPoints.length, 2500);
+            let heartPoints = calculateHeartTargets(maxCount);
 
-            // Crear partículas para Corazón
-            hrtPoints.forEach(pt => {
-                particlesArray.push(new Particle(pt));
-            });
-
-            console.log("Total partículas:", particlesArray.length);
+            for (let i = 0; i < maxCount; i++) {
+                let hT = heartPoints[i];
+                let qT = questionPoints[i] || null;
+                let aT = answerPoints[i] || null;
+                let bT = btsPoints[i] || null;
+                particlesArray.push(new Particle(hT, qT, aT, bT));
+            }
         }
 
         function animate() {
-            ctx.fillStyle = 'rgba(5, 5, 5, 0.25)'; // Rastro un poco más oscuro
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.25)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Z-Sort simple para profundidad
             particlesArray.sort((a, b) => b.z - a.z);
-
             particlesArray.forEach(p => p.update());
             requestAnimationFrame(animate);
-        }
-
-        function celebrar(e) {
-            e.preventDefault();
-            // Explosión de colores
-            particlesArray.forEach(p => {
-                p.vx = (Math.random() - 0.5) * 20;
-                p.vy = (Math.random() - 0.5) * 20;
-                p.colorHue = Math.random() * 360; // Arcoiris
-                p.saturation = '100%';
-            });
-            isHeartFormed = false; // Romper formación
-            document.getElementById('btnYes').style.display = 'none';
-            document.getElementById('statusMsg').innerText = "¡GRACIAS! ❤️";
-            alert("¡TE AMO! ❤️ Gracias por ser mi San Valentín.");
         }
 
         // --- MEDIA PIPE ---
         const videoElement = document.getElementById('input_video');
         const statusMsg = document.getElementById('statusMsg');
         const mainTitle = document.getElementById('mainTitle');
+        const instructionText = document.getElementById('instructionText');
         const btnRetry = document.getElementById('btnRetry');
-        const btnYes = document.getElementById('btnYes');
         let camera;
 
         function onResults(results) {
-            let gestureFound = false;
+            let handsDetected = false;
+            let handOpenDetected = false;
+            let thumbsUpDetected = false;
+            let fingerHeartDetected = false;
+
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                handsDetected = true;
+
                 for (const landmarks of results.multiHandLandmarks) {
+                    const wrist = landmarks[0];
                     const thumbTip = landmarks[4];
                     const indexTip = landmarks[8];
-                    const distance = Math.sqrt(
-                        Math.pow(thumbTip.x - indexTip.x, 2) +
-                        Math.pow(thumbTip.y - indexTip.y, 2)
-                    );
-                    if (distance < 0.05) gestureFound = true;
+                    const pinkyTip = landmarks[20];
+
+                    const dIndex = Math.hypot(indexTip.x - wrist.x, indexTip.y - wrist.y);
+                    const dPinky = Math.hypot(pinkyTip.x - wrist.x, pinkyTip.y - wrist.y);
+                    const dThumb = Math.hypot(thumbTip.x - wrist.x, thumbTip.y - wrist.y);
+
+                    // Distancia entre pulgar e índice (para el Finger Heart)
+                    const dThumbIndex = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
+
+                    // 1. MANO ABIERTA
+                    if (dIndex > 0.25 && dPinky > 0.25 && dThumb > 0.25) {
+                        handOpenDetected = true;
+                    }
+                    // 2. PULGAR ARRIBA
+                    else if (dThumb > 0.2 && dIndex < 0.25 && dPinky < 0.25 && thumbTip.y < wrist.y) {
+                        thumbsUpDetected = true;
+                    }
+                    // 3. FINGER HEART (Corazón Coreano)
+                    // Puntas juntas, no es mano abierta
+                    else if (dThumbIndex < 0.05) {
+                        fingerHeartDetected = true;
+                    }
                 }
             }
 
-            if (gestureFound) {
-                if (!isHeartFormed) {
-                    isHeartFormed = true;
-                    // Ocultar texto HTML, mostrar partículas
+            // Actualizar estado global
+            isHandsDetected = handsDetected;
+
+            // UI Logica - PRIORIDADES
+            if (!isHandsDetected) {
+                isHandOpen = false; isThumbsUp = false; isFingerHeart = false;
+                mainTitle.classList.remove('fade-out');
+                mainTitle.innerText = "Bienvenido";
+                statusMsg.innerText = "Acerca tu mano para comenzar la magia...";
+                statusMsg.style.color = "#ff69b4";
+                instructionText.innerHTML = "Extiende tu mano y <span>crea amor</span>";
+                return;
+            }
+
+            // GESTOS
+            if (fingerHeartDetected) {
+                // EASTER EGG PRIORITY
+                if (!isFingerHeart) {
+                    isFingerHeart = true;
+                    isHandOpen = false; isThumbsUp = false;
                     mainTitle.classList.add('fade-out');
-                    statusMsg.innerText = "";
-                    setTimeout(() => {
-                        btnYes.style.display = "block";
-                    }, 1000); // Retraso para que se lea primero el texto de partículas
+                    statusMsg.innerText = "¡Nuestro secreto especial! 💜";
+                    statusMsg.style.color = "#9b59b6";
+                    instructionText.innerHTML = "✨ I Purple You ✨ <span>Mi amor eterno</span>";
+                }
+            } else if (thumbsUpDetected) {
+                if (!isThumbsUp) {
+                    isThumbsUp = true;
+                    isHandOpen = false; isFingerHeart = false;
+                    mainTitle.classList.add('fade-out');
+                    statusMsg.innerText = "¡El 'Sí' más hermoso! ❤️";
+                    statusMsg.style.color = "#ff3366";
+                    instructionText.innerHTML = "Juntos para siempre <span>❤️</span>";
+                }
+            } else if (handOpenDetected) {
+                if (!isHandOpen) {
+                    isHandOpen = true;
+                    isThumbsUp = false; isFingerHeart = false;
+                    mainTitle.classList.add('fade-out');
+                    statusMsg.innerText = "Dime que sí...";
+                    statusMsg.style.color = "#ffffff";
+                    instructionText.innerHTML = "Si tu respuesta es Sí: <span>Haz 👍</span>";
                 }
             } else {
-                // Si pierdes el gesto, ¿volvemos al caos? 
-                // Opcional: mantengamos el corazón un poco si ya se formó, o rompemos inmediatamente.
-                // Aquí lo hacemos estricto: sin gesto, no hay corazón.
-                if (isHeartFormed) {
-                    isHeartFormed = false;
-                    mainTitle.classList.remove('fade-out');
-                    statusMsg.innerText = "Mantén el gesto...";
-                    btnYes.style.display = "none";
+                // NEUTRO (Corazón)
+                if (isHandOpen || isThumbsUp || isFingerHeart || mainTitle.innerText === "Bienvenido") {
+                    isHandOpen = false; isThumbsUp = false; isFingerHeart = false;
+                    mainTitle.classList.add('fade-out');
+                    statusMsg.innerText = "Tu presencia forma mi corazón.";
+                    statusMsg.style.color = "#ff69b4";
+                    instructionText.innerHTML = "Para declararme: <span>Abre tu mano ✋</span>";
                 }
             }
         }
 
         async function startCamera() {
             btnRetry.style.display = 'none';
-
             const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-            hands.setOptions({
-                maxNumHands: 2,
-                modelComplexity: 1,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
+            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
             hands.onResults(onResults);
-
             camera = new Camera(videoElement, {
                 onFrame: async () => { await hands.send({ image: videoElement }); },
                 width: 640, height: 480
             });
-
             try {
                 await camera.start();
-                statusMsg.innerText = "Cámara activa. ¡Haz el gesto!";
+                statusMsg.innerText = "Cámara activa. Pon tu mano.";
+                instructionText.innerHTML = "Extiende tu mano y <span>crea amor</span>";
                 document.getElementById('cameraPreview').style.opacity = 1;
             } catch (error) {
                 console.error(error);
                 statusMsg.innerText = "Necesitas dar permiso a la cámara.";
+                instructionText.innerHTML = "Error: <span>Activa la cámara</span>";
                 btnRetry.style.display = 'block';
             }
         }
 
-        // Arrancar
         initSystem();
         animate();
         window.onload = startCamera;
