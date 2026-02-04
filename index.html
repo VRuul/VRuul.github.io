@@ -3,267 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presentación de Análisis de Marca</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Corazón BTS - Gesto IA</title>
+    
+    <!-- Librerías de MediaPipe para detección de manos -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        /* --- Estilos Generales --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8;
-            transition: background-color 0.3s ease;
-        }
-        .slide-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-        .slide {
-            background-color: white;
-            padding: 3rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            max-width: 900px;
-            width: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            transform-origin: center center;
-            transition: transform 0.6s ease, opacity 0.6s ease;
-        }
-        .slide.active {
-            display: flex;
-            opacity: 1;
-            transform: scale(1);
-        }
-        .slide-enter {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        .slide-exit {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
-        .slide h1, .slide h2 {
-            font-weight: 700;
-            color: #1e3a8a;
-            margin-bottom: 1rem;
-        }
-        .slide h1 {
-            font-size: 2.5rem;
-        }
-        .slide h2 {
-            font-size: 2rem;
-        }
-        .slide p {
-            font-size: 1.125rem;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-        .slide ul {
-            text-align: left;
-            margin: 1.5rem 0;
-        }
-        .slide li {
-            list-style: disc;
-            margin-left: 2rem;
-            color: #4b5563;
-            font-size: 1.125rem;
-        }
-        .navigation {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 1rem;
-        }
-        .navigation button {
-            background-color: #3b82f6;
-            color: white;
-            padding: 0.75rem 2rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-        .navigation button:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-        }
-        .navigation button:disabled {
-            background-color: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .image-container {
-            margin: 2rem 0;
-            border-radius: 1rem;
             overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            max-width: 500px;
+            background: #050505;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
         }
-        .image-container img {
-            width: 100%;
-            height: auto;
-            display: block;
+
+        /* --- Lienzo (Canvas) --- */
+        #canvas1 {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: 1;
         }
-        .quote {
-            font-style: italic;
-            color: #6b7280;
-            margin-top: 1.5rem;
-            border-left: 4px solid #3b82f6;
-            padding-left: 1rem;
-            font-size: 1rem;
+
+        /* --- Elementos de Video (Ocultos o Miniatura) --- */
+        #input_video {
+            display: none; /* Ocultamos el video raw, usaremos las partículas */
         }
-        .slide-counter {
+        
+        .camera-preview {
             position: absolute;
-            top: 2rem;
-            right: 2rem;
-            font-size: 1rem;
-            color: #4b5563;
+            bottom: 20px;
+            right: 20px;
+            width: 160px;
+            height: 120px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 60, 100, 0.5);
+            overflow: hidden;
+            z-index: 10;
+            opacity: 0; /* Se muestra al activar */
+            transition: opacity 0.5s;
+        }
+        
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Efecto espejo */
+        }
+
+        /* --- UI --- */
+        .content {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+            width: 90%;
+            transition: opacity 0.5s;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 300;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255, 60, 100, 0.5);
+            color: #fff0f5;
+        }
+
+        p { font-size: 1.2rem; opacity: 0.9; margin-bottom: 20px; letter-spacing: 2px; }
+
+        .status-msg {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #ff69b4;
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        /* Botón de Cámara */
+        .btn-cam {
+            pointer-events: auto;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 60, 100, 0.5);
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+        .btn-cam:hover { background: rgba(255, 60, 100, 0.3); }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-    <div class="slide-container">
-        <!-- Slide 1: Título -->
-        <div class="slide" id="slide-1">
-            <h1>Un Estudio Comparativo de la Autenticidad de Marca</h1>
-            <p class="mt-4 text-gray-600 font-semibold">La narrativa de Google frente a la percepción del usuario y los desafíos de Apple.</p>
-            <div class="image-container">
-                <img src="apple vs google.jpg" alt="Análisis de marca Google y Apple.">
-            </div>
-        </div>
-
-        <!-- Slide 2: Análisis de Google -->
-        <div class="slide" id="slide-2">
-            <h2>Análisis de Google: La Marca Favorita</h2>
-            <p>La identidad de Google se construye sobre una misión clara y una narrativa centrada en la utilidad y la innovación.</p>
-            <p class="quote">"Organizar la información del mundo para que sea útil y accesible para todos."</p>
-            <div class="image-container">
-                <img src="google.webp" alt="Logo de Google y texto de su misión.">
-            </div>
-        </div>
-
-        <!-- Slide 3: Percepción de Google -->
-        <div class="slide" id="slide-3">
-            <h2>Percepción del Consumidor: Google</h2>
-            <p>Los usuarios perciben a Google como una herramienta indispensable, pero hay una brecha entre la narrativa y la realidad operativa.</p>
-            <ul class="list-disc text-left mt-4 mx-auto max-w-lg">
-                <li>**Utilidad:** Es una solución fundamental para problemas cotidianos.</li>
-                <li>**Frustración:** Falta de soporte al cliente y problemas de privacidad debido al modelo de negocio de publicidad.</li>
-            </ul>
-        </div>
-
-        <!-- Slide 4: Análisis de Apple -->
-        <div class="slide" id="slide-4">
-            <h2>Análisis de Apple: La Marca No Favorita</h2>
-            <p>Apple se posiciona como una marca de lujo, vendiendo un estilo de vida y una "sensación de lujo" a través de la perfección.</p>
-            <p class="quote">"Ser los mejores, no los primeros."</p>
-            <div class="image-container">
-                <img src="apple.jpeg" alt="Logo de Apple y texto de lujo y perfección.">
-            </div>
-        </div>
-
-        <!-- Slide 5: Percepción de Apple -->
-        <div class="slide" id="slide-5">
-            <h2>Percepción del Consumidor: Apple</h2>
-            <p>Hay una fuerte lealtad aspiracional, pero también una decepción cuando la realidad contradice la promesa de perfección.</p>
-            <ul class="list-disc text-left mt-4 mx-auto max-w-lg">
-                <li>**Lealtad:** Calidad, larga vida útil y un ecosistema integrado difícil de abandonar.</li>
-                <li>**Decepción:** Precios premium, políticas de reparación restrictivas y fallos de hardware/software.</li>
-            </ul>
-        </div>
-
-        <!-- Slide 6: Caso de Estudio "La Caja de Herramientas de Elena" -->
-        <div class="slide" id="slide-6">
-            <h2>Caso de Estudio: La Caja de Herramientas de Elena</h2>
-            <p>La historia de una restauradora que busca herramientas de calidad ilustra cómo la autenticidad de una marca resuena con los valores del cliente.</p>
-            <div class="image-container">
-                <img src="caja de herramientas.png" alt="Ilustración de una caja de herramientas de restauradora.">
-            </div>
-        </div>
-
-        <!-- Slide 7: Conclusión -->
-        <div class="slide" id="slide-7">
-            <h2>Conclusión</h2>
-            <p>La autenticidad no es un adjetivo, sino un verbo: es la **acción continua** de alinear las promesas de la marca con la realidad de la experiencia del consumidor.</p>
-            <p class="quote">"La narrativa más poderosa y auténtica es la reputación, forjada por la suma de todas las experiencias."</p>
-        </div>
+    <canvas id="canvas1"></canvas>
+    
+    <!-- Contenedor para la vista previa de la cámara -->
+    <div class="camera-preview" id="cameraPreview">
+        <video id="input_video"></video>
     </div>
 
-    <!-- Navegación -->
-    <div class="navigation">
-        <button id="prevBtn" disabled>Anterior</button>
-        <button id="nextBtn">Siguiente</button>
-    </div>
-    <div class="slide-counter">
-        <span id="currentSlide">1</span> / <span id="totalSlides">7</span>
+    <div class="content" id="uiContent">
+        <p>Experiencia Interactiva</p>
+        <h1 id="mainTitle">Haz el gesto ❤️</h1>
+        <p class="status-msg" id="statusMsg">Presiona activar para comenzar</p>
+        <button class="btn-cam" onclick="startCamera()">Activar Cámara</button>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const slides = document.querySelectorAll('.slide');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const currentSlideCounter = document.getElementById('currentSlide');
-            const totalSlidesCounter = document.getElementById('totalSlides');
-            let currentSlideIndex = 0;
+        // --- Variables Globales ---
+        const canvas = document.getElementById('canvas1');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-            function showSlide(index) {
-                slides.forEach((slide, i) => {
-                    if (i === index) {
-                        slide.classList.add('active');
-                        slide.classList.remove('slide-enter', 'slide-exit');
-                    } else {
-                        slide.classList.remove('active');
-                    }
-                });
-                updateButtons();
-                updateCounter();
-            }
+        let particlesArray = [];
+        let heartSizeScale = Math.min(canvas.width, canvas.height) / 400; 
+        
+        // Estado del gesto
+        let isHeartFormed = false; // false = dispersos, true = corazón
+        let gestureDetectedTime = 0;
 
-            function updateButtons() {
-                prevBtn.disabled = currentSlideIndex === 0;
-                nextBtn.disabled = currentSlideIndex === slides.length - 1;
-            }
+        // Configuración 3D
+        let angleY = 0; 
+        const perspective = 800; 
+        
+        // Mouse (para interacción extra)
+        const mouse = { x: null, y: null, radius: 150 };
 
-            function updateCounter() {
-                currentSlideCounter.textContent = currentSlideIndex + 1;
-                totalSlidesCounter.textContent = slides.length;
-            }
-
-            nextBtn.addEventListener('click', () => {
-                if (currentSlideIndex < slides.length - 1) {
-                    currentSlideIndex++;
-                    showSlide(currentSlideIndex);
-                }
-            });
-
-            prevBtn.addEventListener('click', () => {
-                if (currentSlideIndex > 0) {
-                    currentSlideIndex--;
-                    showSlide(currentSlideIndex);
-                }
-            });
-
-            // Teclas de flecha para navegación
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowRight') {
-                    nextBtn.click();
-                } else if (e.key === 'ArrowLeft') {
-                    prevBtn.click();
-                }
-            });
-
-            // Initial state
-            showSlide(currentSlideIndex);
+        window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            heartSizeScale = Math.min(canvas.width, canvas.height) / 400;
+            initParticles();
         });
+
+        // --- Lógica del Corazón (Matemáticas) ---
+        function getHeartPoint(t) {
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+            return {x, y};
+        }
+
+        // --- Clase Partícula ---
+        class Particle {
+            constructor() {
+                // 1. Posición Objetivo (Forma de Corazón)
+                let t = Math.random() * Math.PI * 2;
+                let point = getHeartPoint(t);
+                let r = Math.sqrt(Math.random()); 
+                
+                // Coordenadas objetivo (Target)
+                this.tx0 = point.x * r * 15 * heartSizeScale;
+                this.ty0 = point.y * r * 15 * heartSizeScale;
+                let thickness = 10 * heartSizeScale * (1 - r * 0.5); 
+                this.tz0 = (Math.random() - 0.5) * thickness * 30; 
+
+                // 2. Posición Dispersa (Estado inicial/caos)
+                // Esparcidos por toda la pantalla aleatoriamente
+                this.dx = (Math.random() - 0.5) * canvas.width * 1.5;
+                this.dy = (Math.random() - 0.5) * canvas.height * 1.5;
+                this.dz = (Math.random() - 0.5) * 1000;
+                
+                // Velocidad de movimiento en modo disperso
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+
+                // Posición Actual
+                this.x = this.dx;
+                this.y = this.dy;
+                this.z = this.dz;
+
+                this.sizeBase = Math.random() * 2 + 0.5;
+                let hue = 330 + Math.random() * 30; 
+                this.colorHue = hue;
+            }
+
+            draw(scale, screenX, screenY) {
+                let alpha = (scale * 0.8);
+                alpha = Math.max(0, Math.min(1, alpha)); 
+                ctx.fillStyle = `hsla(${this.colorHue}, 80%, 60%, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, this.sizeBase * scale, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            update() {
+                // Lógica de Estado
+                if (isHeartFormed) {
+                    // MODO CORAZÓN: Volar hacia la posición objetivo (tx0, ty0, tz0)
+                    // Interpolación lineal (Lerp) para movimiento suave
+                    this.x += (this.tx0 - this.x) * 0.05;
+                    this.y += (this.ty0 - this.y) * 0.05;
+                    this.z += (this.tz0 - this.z) * 0.05;
+                } else {
+                    // MODO DISPERSO: Flotar como polvo
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Rebotar en bordes virtuales del modo disperso para no perderlas
+                    if (this.x > canvas.width || this.x < -canvas.width) this.vx *= -1;
+                    if (this.y > canvas.height || this.y < -canvas.height) this.vy *= -1;
+                    
+                    // Alejar suavemente del centro si se estaban formando
+                    // esto hace que "exploten" un poco al soltar el gesto
+                }
+
+                // --- Proyección 3D ---
+                // Rotación global (solo se nota bien cuando están formadas)
+                let currentAngleY = angleY;
+                if (!isHeartFormed) currentAngleY = angleY * 0.2; // Rotación más lenta si están dispersas
+
+                let cos = Math.cos(currentAngleY);
+                let sin = Math.sin(currentAngleY);
+                
+                let rx = this.x * cos - this.z * sin;
+                let rz = this.x * sin + this.z * cos;
+                let ry = this.y; 
+
+                let scale = perspective / (perspective + rz + 1000); 
+                let screenX = rx * scale + canvas.width / 2;
+                let screenY = ry * scale + canvas.height / 2;
+
+                this.draw(scale, screenX, screenY);
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            let numberOfParticles = 2000; // Reducimos un poco para compensar el uso de CPU de la cámara
+            if (canvas.width < 768) numberOfParticles = 800;
+
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            angleY += 0.005;
+
+            // Ordenar por profundidad para efecto 3D correcto
+            particlesArray.sort((a, b) => {
+                // Aproximación rápida de Z rotado para ordenar
+                // Usamos la posición actual, no la objetivo
+                let zA = a.x * Math.sin(angleY) + a.z * Math.cos(angleY);
+                let zB = b.x * Math.sin(angleY) + b.z * Math.cos(angleY);
+                return zB - zA; 
+            });
+
+            particlesArray.forEach(particle => particle.update());
+            requestAnimationFrame(animate);
+        }
+
+        // --- MEDIA PIPE / VISIÓN ARTIFICIAL ---
+        
+        const videoElement = document.getElementById('input_video');
+        const statusMsg = document.getElementById('statusMsg');
+        const mainTitle = document.getElementById('mainTitle');
+        let camera;
+
+        function onResults(results) {
+            let gestureFound = false;
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    // Detección "Finger Heart" (Corazón BTS)
+                    // Es cuando el Pulgar (4) y el Índice (8) se cruzan/tocan.
+                    
+                    const thumbTip = landmarks[4];
+                    const indexTip = landmarks[8];
+                    
+                    // Calculamos distancia entre puntas (en coordenadas normalizadas 0-1)
+                    const dx = thumbTip.x - indexTip.x;
+                    const dy = thumbTip.y - indexTip.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+
+                    // Umbral de detección (si están muy cerca)
+                    if (distance < 0.05) { 
+                        gestureFound = true;
+                    }
+                }
+            }
+
+            if (gestureFound) {
+                isHeartFormed = true;
+                statusMsg.innerText = "¡Gesto Detectado! ❤️";
+                statusMsg.style.color = "#ff3366";
+                mainTitle.innerText = "¡Te quiero!";
+            } else {
+                isHeartFormed = false;
+                statusMsg.innerText = "Haz el gesto del corazón con los dedos...";
+                statusMsg.style.color = "#ff69b4";
+                mainTitle.innerText = "Esperando amor...";
+            }
+        }
+
+        async function startCamera() {
+            statusMsg.innerText = "Cargando cámara...";
+            document.querySelector('.btn-cam').style.display = 'none'; // Ocultar botón
+            document.getElementById('cameraPreview').style.opacity = 1; // Mostrar preview
+
+            const hands = new Hands({locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }});
+            
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+            
+            hands.onResults(onResults);
+
+            camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    await hands.send({image: videoElement});
+                },
+                width: 640,
+                height: 480
+            });
+            
+            try {
+                await camera.start();
+                statusMsg.innerText = "Cámara activa. ¡Haz el gesto!";
+            } catch (error) {
+                console.error(error);
+                statusMsg.innerText = "Error al acceder a la cámara. Revisa los permisos.";
+                document.querySelector('.btn-cam').style.display = 'block';
+            }
+        }
+
+        // Arrancar animación visual
+        initParticles();
+        animate();
+
     </script>
 </body>
 </html>
