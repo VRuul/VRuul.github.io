@@ -438,29 +438,56 @@
                 handsDetected = true;
 
                 for (const landmarks of results.multiHandLandmarks) {
-                    const wrist = landmarks[0];
+                    // Puntos de referencia
                     const thumbTip = landmarks[4];
                     const indexTip = landmarks[8];
+                    const middleTip = landmarks[12];
+                    const ringTip = landmarks[16];
                     const pinkyTip = landmarks[20];
 
-                    const dIndex = Math.hypot(indexTip.x - wrist.x, indexTip.y - wrist.y);
-                    const dPinky = Math.hypot(pinkyTip.x - wrist.x, pinkyTip.y - wrist.y);
-                    const dThumb = Math.hypot(thumbTip.x - wrist.x, thumbTip.y - wrist.y);
+                    const thumbIP = landmarks[3];
+                    const indexPIP = landmarks[6];
+                    const middlePIP = landmarks[10];
+                    const ringPIP = landmarks[14];
+                    const pinkyPIP = landmarks[18];
+                    const indexMCP = landmarks[5]; // Nudillo del índice
 
-                    // Distancia entre pulgar e índice (para el Finger Heart)
-                    const dThumbIndex = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
+                    // En pantalla, Y crece hacia abajo. 
+                    // Dedo ESTIRADO (Hacia arriba): Tip.y < PIP.y
+                    // Dedo DOBLADO: Tip.y > PIP.y (o muy cerca)
 
-                    // 1. MANO ABIERTA
-                    if (dIndex > 0.25 && dPinky > 0.25 && dThumb > 0.25) {
+                    const isIndexExt = indexTip.y < indexPIP.y;
+                    const isMiddleExt = middleTip.y < middlePIP.y;
+                    const isRingExt = ringTip.y < ringPIP.y;
+                    const isPinkyExt = pinkyTip.y < pinkyPIP.y;
+
+                    // --- 1. MANO ABIERTA ✋ ---
+                    // Al menos 4 dedos estirados
+                    if (isIndexExt && isMiddleExt && isRingExt && isPinkyExt) {
                         handOpenDetected = true;
                     }
-                    // 2. PULGAR ARRIBA
-                    else if (dThumb > 0.2 && dIndex < 0.25 && dPinky < 0.25 && thumbTip.y < wrist.y) {
+
+                    // --- 2. PULGAR ARRIBA 👍 ---
+                    // Pulgar hacia arriba (Tip < IP) y los otros dedos doblados (Tip > PIP o !Extended)
+                    // Hacemos la comprobación estricta de dedos doblados
+                    const isThumbUp = thumbTip.y < thumbIP.y;
+                    const areOthersCurled = !isIndexExt && !isMiddleExt && !isRingExt && !isPinkyExt;
+
+                    if (isThumbUp && areOthersCurled) {
                         thumbsUpDetected = true;
                     }
-                    // 3. FINGER HEART (Corazón Coreano)
-                    // Puntas juntas, no es mano abierta
-                    else if (dThumbIndex < 0.05) {
+
+                    // --- 3. CORAZÓN COREANO 🫰 ---
+                    // Pulgar e índice muy cerca
+                    const dThumbIndex = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
+
+                    // El índice no debe estar totalmente escondido (como en un puño)
+                    // Verificamos que la punta del índice esté "alta" (arriba del nudillo MCP)
+                    const isIndexHigh = indexTip.y < indexMCP.y;
+
+                    if (dThumbIndex < 0.06 && isIndexHigh) {
+                        // Evitamos conflicto si parece un pulgar arriba raro
+                        // En corazón coreano, los otros dedos suelen estar relajados o doblados, pero el pulgar NO apunta recto arriba solo
                         fingerHeartDetected = true;
                     }
                 }
