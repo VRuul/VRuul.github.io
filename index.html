@@ -457,12 +457,9 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const isMobile = canvas.width < 600;
-            const spacing = isMobile ? canvas.width * 0.14 : 90;
+            const spacing = isMobile ? canvas.width * 0.13 : 90;
 
-            // CORRECCIÓN: Ajustar el startX para centrar el bloque de 6 dígitos + 2 espacios
-            // Ancho total aproximado = 5 * spacing + 1 * spacing (por los 2 medios espacios extra) = 6 * spacing
-            // El inicio debe ser -3 * spacing
-            const startX = -(spacing * 3);
+            const startX = -(spacing * 3.5);
 
             const digitSize = isMobile ? 35 : 70;
             const arrowSize = digitSize * 0.6;
