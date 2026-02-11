@@ -158,6 +158,44 @@
             pointer-events: none !important;
         }
 
+        /* Estilos del Contador Final */
+        #countdown {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 1s;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #countdown.visible {
+            opacity: 1;
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            color: #ff99aa;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
         @media (max-width: 600px) {
             #start-btn {
                 font-size: 1rem;
@@ -168,6 +206,15 @@
                 font-size: 1.2rem;
                 padding: 15px 30px;
                 width: 90%;
+            }
+
+            #countdown {
+                bottom: 15%;
+                width: 90%;
+            }
+
+            .timer {
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -188,6 +235,12 @@
     <button id="start-btn">Comenzar</button>
     <button id="reveal-btn">¿Quieres saber qué sigue?</button>
 
+    <!-- Contenedor del Contador -->
+    <div id="countdown">
+        <div class="timer-label">Próximo San Valentín</div>
+        <div class="timer" id="timer-val">00d 00h 00m 00s</div>
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas1');
         const ctx = canvas.getContext('2d');
@@ -200,6 +253,8 @@
         const navControls = document.getElementById('nav-controls');
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
+        const countdownEl = document.getElementById('countdown');
+        const timerVal = document.getElementById('timer-val');
 
         let particles = [];
         let fontSize = Math.min(canvas.width * 0.12, 80);
@@ -207,19 +262,41 @@
         let currentState = 'intro';
 
         let passcode = [0, 0, 0, 0, 0, 0];
-        const correctCode = [2, 3, 0, 7, 2, 3];
+
+        // CORRECCIÓN: Usar constructor con (Año, Mes-1, Día) para evitar problemas de zona horaria
+        // Meses van de 0 (Enero) a 11 (Diciembre). Julio es 6.
+        const startDate = new Date(2023, 6, 23); // 23 de Julio de 2023
+
+        // Extraer partes de la fecha para el código y el texto
+        const targetDay = startDate.getDate();
+        const targetMonth = startDate.getMonth() + 1; // 0-11 a 1-12
+        const targetYear = startDate.getFullYear() % 100; // últimos 2 dígitos
+
+        // Generar código correcto dinámicamente [D, D, M, M, A, A]
+        const d1 = Math.floor(targetDay / 10);
+        const d2 = targetDay % 10;
+        const m1 = Math.floor(targetMonth / 10);
+        const m2 = targetMonth % 10;
+        const y1 = Math.floor(targetYear / 10);
+        const y2 = targetYear % 10;
+
+        const correctCode = [d1, d2, m1, m2, y1, y2];
+
         let clickZones = [];
         let currentCorrectDigits = 0;
 
-        const startDate = new Date('2023-07-23');
+        // Cálculos de fecha para la historia
         const today = new Date();
         const diffTime = Math.abs(today - startDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        // Textos actualizados con saltos de línea explícitos
+        const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const formattedDateStr = `${startDate.getDate()} de ${monthsNames[startDate.getMonth()]}\ndel ${startDate.getFullYear()}`;
+
+        // Textos actualizados con fecha dinámica
         const storySequence = [
             { text: "Dicen que los días\nimportantes no siempre\nvienen anunciados...", time: 6000 },
-            { text: "Pero el 23 de Julio\ndel 2023 fue\nla excepción.", time: 6000 },
+            { text: `Pero el ${formattedDateStr}\nfue la excepción.`, time: 6000 },
             { text: "Fue el momento exacto\nen el que el mundo\ndejó de ser un\nlugar ordinario...", time: 6000, effect: 'world_grey' },
             { text: "Para llenarse de colores\nque solo tú\nsabes pintar.", time: 6000, effect: 'world_color' },
             { text: "Ese día no solo aceptamos\ncaminar juntos;\ndecidimos que\ncualquier camino...", time: 6000 },
@@ -234,20 +311,25 @@
         const mouse = { x: null, y: null, radius: 30 };
         window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
 
+        // Manejo de Clics (PC)
         window.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
             const x = e.clientX;
             const y = e.clientY;
             if (currentState === 'lock') checkLockClick(x, y);
             else if (currentState === 'question') checkQuestionClick(x, y);
         });
 
+        // Manejo de Touch (Móvil)
         window.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (e.cancelable) e.preventDefault();
             const x = e.touches[0].clientX;
             const y = e.touches[0].clientY;
             mouse.x = x; mouse.y = y;
             if (currentState === 'lock') checkLockClick(x, y);
             if (currentState === 'question') checkQuestionClick(x, y);
-        });
+        }, { passive: false });
 
         startBtn.addEventListener('click', () => {
             startBtn.classList.add('hidden');
@@ -304,16 +386,15 @@
 
             let lines = [];
             if (useMaxWidth) {
-                const maxWidth = canvas.width * 0.9; // Más margen para móvil
+                const maxWidth = canvas.width * 0.9;
                 lines = wrapText(ctx, text, maxWidth);
             } else { lines = text.split('\n'); }
 
-            const lineHeight = actualSize * 1.3; // Más espacio entre líneas
+            const lineHeight = actualSize * 1.3;
             const startY = y - ((lines.length - 1) * lineHeight) / 2;
 
             lines.forEach((line, i) => { ctx.fillText(line, x, startY + (i * lineHeight)); });
 
-            // Densidad ajustada para texto más claro
             const gap = isMobile ? 2 : 2;
             const points = [];
             const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -336,12 +417,9 @@
             const startX = -(spacing * 2.5);
             const digitSize = isMobile ? 35 : 60;
             const arrowSize = digitSize * 0.6;
-            const verticalGap = digitSize * 1.4; // Más separación vertical
+            const verticalGap = digitSize * 1.4;
 
-            // Título subido más arriba y con gap 1 para máxima definición
             const titlePoints = getTextCoordinates("FECHA ESPECIAL", centerX, centerY - (verticalGap * 2.5), isMobile ? 24 : 30, false);
-            // Densificar manualmente el título duplicando puntos cercanos (truco visual)
-            // O simplemente asegurarnos que getTextCoordinates use gap bajo para este caso.
 
             points = points.concat(titlePoints);
 
@@ -516,7 +594,7 @@
             const scene = storySequence[index];
             let targets = [];
             const isMobile = canvas.width < 600;
-            const storyFontSize = isMobile ? 32 : 60; // Texto un poco más grande en móviles
+            const storyFontSize = isMobile ? 32 : 60;
 
             if (scene.effect === 'world_grey' || scene.effect === 'world_color') {
                 const worldRadius = Math.min(canvas.width, canvas.height) / (isMobile ? 3 : 3.5);
@@ -605,6 +683,26 @@
             setTimeout(showFinalQuestion, 2000);
         }
 
+        function startCountdown() {
+            countdownEl.classList.add('visible');
+            const updateTimer = () => {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                let valentine = new Date(currentYear, 1, 14); // Mes 1 es Febrero
+                if (now > valentine) valentine = new Date(currentYear + 1, 1, 14);
+
+                const diff = valentine - now;
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const m = Math.floor((diff / 1000 / 60) % 60);
+                const s = Math.floor((diff / 1000) % 60);
+
+                timerVal.innerText = `${d}d ${h}h ${m}m ${s}s`;
+            };
+            setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
         function celebrate() {
             currentState = 'celebration';
             clickZones = [];
@@ -615,10 +713,13 @@
                 p.colorHue = Math.random() * 360;
                 p.colorSat = '100%'; p.colorLight = '60%';
             });
+
             setTimeout(() => {
                 const finalTargets = getTextCoordinates("¡TE AMO! ❤️", canvas.width / 2, canvas.height / 2, 80);
                 const heartBg = getHeartCoordinates(2000);
                 assignTargets(finalTargets.concat(heartBg), true);
+                // Iniciar contador
+                startCountdown();
             }, 1000);
         }
 
