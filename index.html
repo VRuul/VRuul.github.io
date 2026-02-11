@@ -358,7 +358,7 @@
 
         // --- Configuración Candado ---
         let passcode = [0, 0, 0, 0, 0, 0];
-        const startDate = new Date(2023, 7, 23);
+        const startDate = new Date(2024, 6, 23);
         const targetDay = startDate.getDate();
         const targetMonth = startDate.getMonth() + 1;
         const targetYear = startDate.getFullYear() % 100;
@@ -458,13 +458,20 @@
             const centerY = canvas.height / 2;
             const isMobile = canvas.width < 600;
             const spacing = isMobile ? canvas.width * 0.14 : 90;
-            const startX = -(spacing * 2.5);
-            const digitSize = isMobile ? 40 : 70;
+
+            // CORRECCIÓN: Ajustar el startX para centrar el bloque de 6 dígitos + 2 espacios
+            // Ancho total aproximado = 5 * spacing + 1 * spacing (por los 2 medios espacios extra) = 6 * spacing
+            // El inicio debe ser -3 * spacing
+            const startX = -(spacing * 3);
+
+            const digitSize = isMobile ? 35 : 70;
             const arrowSize = digitSize * 0.6;
             const verticalGap = digitSize * 1.2;
 
             passcode.forEach((digit, index) => {
-                let xPos = centerX + startX + (index * spacing);
+                let xPos = centerX + startX + (index * spacing) + (spacing / 2); // +spacing/2 para centrar el primer dígito en su celda
+
+                // Ajuste fino por los espacios de fecha
                 if (index >= 2) xPos += spacing * 0.5;
                 if (index >= 4) xPos += spacing * 0.5;
 
@@ -480,7 +487,6 @@
 
         function getHeartCoordinates(count) {
             const points = [];
-            // Escala aumentada para rodear el contador
             const scale = Math.min(canvas.width, canvas.height) / (canvas.width < 600 ? 25 : 18);
             for (let i = 0; i < count; i++) {
                 let t = Math.random() * Math.PI * 2;
@@ -546,7 +552,6 @@
 
                 // Aplicar Latido si es partícula de corazón final
                 if (this.isHeartParticle && currentState === 'celebration') {
-                    // Desplazamiento desde el centro escalado por el latido
                     const cx = canvas.width / 2;
                     const cy = canvas.height / 2;
                     screenX = cx + (screenX - cx) * heartBeatScale;
@@ -788,7 +793,6 @@
             ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Calculo del latido (Sine wave)
-            // Velocidad 0.005, Amplitud 0.05 (5%)
             if (currentState === 'celebration') {
                 const time = Date.now() * 0.003;
                 heartBeatScale = 1 + (Math.sin(time) * 0.05);
