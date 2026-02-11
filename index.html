@@ -88,6 +88,8 @@
         /* --- Pregunta Final UI --- */
         #question-container {
             pointer-events: auto;
+            z-index: 50;
+            /* Por encima de todo para asegurar el clic */
         }
 
         .big-question {
@@ -413,7 +415,20 @@
 
         revealBtn.addEventListener('click', () => {
             revealBtn.classList.remove('visible');
+            revealBtn.classList.add('hidden');
             showFinalQuestion();
+        });
+
+        // Soporte táctil directo para mayor sensibilidad en móviles
+        btnYes.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            celebrate();
+        });
+
+        btnNo.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            particles.forEach(p => { p.vx = (Math.random() - 0.5) * 20; p.vy = (Math.random() - 0.5) * 20; });
+            alert("¡Esa opción no es válida! Inténtalo de nuevo 😉");
         });
 
         document.getElementById('prev-btn').addEventListener('click', () => {
