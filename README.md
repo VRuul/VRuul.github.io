@@ -45,6 +45,13 @@ Busca la sección `const storySequence`. Ahí puedes cambiar los mensajes y el t
 { text: "Tu mensaje personalizado aquí...", time: 6000 },
 ```
 
+### 3. Poner tu Canción Favorita 🎵
+Para que suene música de fondo:
+1.  Consigue el archivo de audio de la canción (formato **.mp3** es lo ideal).
+2.  Cámbiale el nombre al archivo para que se llame: `musica.mp3`
+3.  Pon ese archivo en la misma carpeta donde está el `index.html`.
+    *   *Si prefieres usar otro nombre*, busca en el código `<source src="musica.mp3"` y cambia `musica.mp3` por el nombre de tu archivo.
+
 ---
 
 ## 🌐 Cómo subirlo a Internet (Tu Página Personal)
