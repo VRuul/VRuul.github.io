@@ -3,17 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Propuesta San Valentín - Partículas IA</title>
-
-    <!-- Librerías MediaPipe -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nuestra Historia</title>
     <style>
         * {
             margin: 0;
@@ -26,6 +17,7 @@
             background: #050505;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
+            touch-action: none;
         }
 
         #canvas1 {
@@ -37,134 +29,145 @@
             z-index: 1;
         }
 
-        #input_video {
-            display: none;
+        /* --- UI General --- */
+        .ui-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
-        .camera-preview {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 160px;
-            height: 120px;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 60, 100, 0.5);
-            overflow: hidden;
-            z-index: 10;
+        #progress-container {
+            display: flex;
+            gap: 5px;
+            padding: 10px 10px;
+            width: 100%;
             opacity: 0;
             transition: opacity 0.5s;
         }
 
-        .camera-preview video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
+        .progress-segment {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
         }
 
-        .content {
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: white;
+            transition: width 0.1s linear;
+        }
+
+        .nav-controls {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: auto;
+            opacity: 0;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #start-btn {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 2;
-            text-align: center;
-            pointer-events: none;
-            mix-blend-mode: overlay;
-            width: 100%;
-            transition: opacity 0.5s;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 300;
-            text-transform: uppercase;
-            text-shadow: 0 0 20px rgba(255, 60, 100, 0.5);
-            color: #fff0f5;
-            transition: opacity 0.5s ease;
-        }
-
-        .fade-out {
-            opacity: 0;
-        }
-
-        p {
+            padding: 15px 40px;
             font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-        }
-
-        .status-msg {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #ff69b4;
-            font-weight: bold;
-            min-height: 20px;
-        }
-
-        /* --- Instrucciones Fijas Inferiores --- */
-        .instruction-bar {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            text-align: center;
-            z-index: 20;
-            pointer-events: none;
-        }
-
-        .instruction-text {
-            display: inline-block;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px 25px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
             color: #fff;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            backdrop-filter: blur(4px);
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid #fff;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 20;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            pointer-events: auto;
+            transition: all 0.5s;
         }
 
-        .instruction-text span {
-            color: #ff69b4;
+        #start-btn:hover {
+            background: #fff;
+            color: #d60000;
+            box-shadow: 0 0 30px rgba(255, 0, 50, 0.8);
+        }
+
+        #reveal-btn {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            background: #ff3366;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s;
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.5);
             font-weight: bold;
         }
 
-        .btn-cam {
+        #reveal-btn.visible {
+            opacity: 1;
             pointer-events: auto;
-            padding: 12px 30px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 60, 100, 0.5);
-            color: white;
-            border-radius: 30px;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-            transition: 0.3s;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            margin-top: 20px;
-            display: none;
         }
 
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+        #reveal-btn:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        @media (max-width: 600px) {
+            #start-btn {
+                font-size: 1rem;
+                padding: 12px 30px;
             }
 
-            .instruction-text {
-                font-size: 0.9rem;
-                padding: 8px 15px;
+            #reveal-btn {
+                font-size: 1.2rem;
+                padding: 15px 30px;
                 width: 90%;
-            }
-
-            .camera-preview {
-                width: 100px;
-                height: 75px;
-                bottom: 90px;
             }
         }
     </style>
@@ -174,23 +177,16 @@
 
     <canvas id="canvas1"></canvas>
 
-    <div class="camera-preview" id="cameraPreview">
-        <video id="input_video"></video>
-    </div>
-
-    <!-- Barra de Instrucciones Fija -->
-    <div class="instruction-bar">
-        <div class="instruction-text" id="instructionText">
-            Acerca tu mano para <span>despertar el corazón</span>
+    <div class="ui-container">
+        <div id="progress-container"></div>
+        <div class="nav-controls" id="nav-controls">
+            <button class="nav-btn" id="prev-btn">❮</button>
+            <button class="nav-btn" id="next-btn">❯</button>
         </div>
     </div>
 
-    <div class="content" id="uiContent">
-        <p>Experiencia Interactiva</p>
-        <h1 id="mainTitle">Bienvenido</h1>
-        <p class="status-msg" id="statusMsg">Solicitando acceso a la cámara...</p>
-        <button class="btn-cam" id="btnRetry" onclick="startCamera()">Intentar de nuevo</button>
-    </div>
+    <button id="start-btn">Comenzar</button>
+    <button id="reveal-btn">¿Quieres saber qué sigue?</button>
 
     <script>
         const canvas = document.getElementById('canvas1');
@@ -198,366 +194,494 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let particlesArray = [];
-        let heartSizeScale = Math.min(canvas.width, canvas.height) / 400;
+        const startBtn = document.getElementById('start-btn');
+        const revealBtn = document.getElementById('reveal-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const navControls = document.getElementById('nav-controls');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
 
-        // Estados
-        let isHandsDetected = false;
-        let isHandOpen = false; // Pregunta
-        let isThumbsUp = false; // Respuesta
-        let isFingerHeart = false; // EASTER EGG (BTS)
+        let particles = [];
+        let fontSize = Math.min(canvas.width * 0.12, 80);
 
-        let angleY = 0;
-        const perspective = 800;
-        const mouse = { x: null, y: null, radius: 150 };
+        let currentState = 'intro';
 
+        let passcode = [0, 0, 0, 0, 0, 0];
+        const correctCode = [2, 3, 0, 7, 2, 3];
+        let clickZones = [];
+        let currentCorrectDigits = 0;
+
+        const startDate = new Date('2023-07-23');
+        const today = new Date();
+        const diffTime = Math.abs(today - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Textos actualizados con saltos de línea explícitos
+        const storySequence = [
+            { text: "Dicen que los días\nimportantes no siempre\nvienen anunciados...", time: 6000 },
+            { text: "Pero el 23 de Julio\ndel 2023 fue\nla excepción.", time: 6000 },
+            { text: "Fue el momento exacto\nen el que el mundo\ndejó de ser un\nlugar ordinario...", time: 6000, effect: 'world_grey' },
+            { text: "Para llenarse de colores\nque solo tú\nsabes pintar.", time: 6000, effect: 'world_color' },
+            { text: "Ese día no solo aceptamos\ncaminar juntos;\ndecidimos que\ncualquier camino...", time: 6000 },
+            { text: "Si es contigo,\nvale la pena.", time: 5000 },
+            { text: `Hoy, ${diffDays} días después...`, time: 5000 },
+            { text: "Sigo eligiendo esa\nmisma fecha como el\ninicio de mi mejor historia.", time: 6000 }
+        ];
+
+        let storyIndex = -1;
+        let storyTimer = null;
+
+        const mouse = { x: null, y: null, radius: 30 };
         window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            heartSizeScale = Math.min(canvas.width, canvas.height) / 400;
-            initSystem();
+
+        window.addEventListener('click', (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            if (currentState === 'lock') checkLockClick(x, y);
+            else if (currentState === 'question') checkQuestionClick(x, y);
         });
 
-        // --- 1. Generar Puntos del Corazón ---
-        function calculateHeartTargets(count) {
+        window.addEventListener('touchstart', (e) => {
+            const x = e.touches[0].clientX;
+            const y = e.touches[0].clientY;
+            mouse.x = x; mouse.y = y;
+            if (currentState === 'lock') checkLockClick(x, y);
+            if (currentState === 'question') checkQuestionClick(x, y);
+        });
+
+        startBtn.addEventListener('click', () => {
+            startBtn.classList.add('hidden');
+            initLockState();
+        });
+
+        revealBtn.addEventListener('click', () => {
+            revealBtn.classList.remove('visible');
+            showFinalQuestion();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (storyIndex > 0) {
+                clearTimeout(storyTimer);
+                storyIndex--;
+                loadStoryScene(storyIndex);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (storyIndex < storySequence.length - 1) {
+                clearTimeout(storyTimer);
+                storyIndex++;
+                loadStoryScene(storyIndex);
+            } else {
+                clearTimeout(storyTimer);
+                endStoryMode();
+            }
+        });
+
+        function wrapText(context, text, maxWidth) {
+            const words = text.replace(/\n/g, " \n ").split(' ');
+            let lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                let word = words[i];
+                if (word === "\n") { lines.push(currentLine); currentLine = ""; continue; }
+                let width = context.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) { currentLine += (currentLine === "" ? "" : " ") + word; }
+                else { lines.push(currentLine); currentLine = word; }
+            }
+            if (currentLine.trim() !== "") lines.push(currentLine);
+            return lines;
+        }
+
+        function getTextCoordinates(text, x, y, size, useMaxWidth = true) {
+            const isMobile = canvas.width < 600;
+            const actualSize = isMobile ? size * 0.8 : size;
+            ctx.font = `900 ${actualSize}px Arial`;
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let lines = [];
+            if (useMaxWidth) {
+                const maxWidth = canvas.width * 0.9; // Más margen para móvil
+                lines = wrapText(ctx, text, maxWidth);
+            } else { lines = text.split('\n'); }
+
+            const lineHeight = actualSize * 1.3; // Más espacio entre líneas
+            const startY = y - ((lines.length - 1) * lineHeight) / 2;
+
+            lines.forEach((line, i) => { ctx.fillText(line, x, startY + (i * lineHeight)); });
+
+            // Densidad ajustada para texto más claro
+            const gap = isMobile ? 2 : 2;
+            const points = [];
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            for (let py = 0; py < canvas.height; py += gap) {
+                for (let px = 0; px < canvas.width; px += gap) {
+                    if (data[(py * canvas.width + px) * 4 + 3] > 128) points.push({ x: px, y: py, z: 0 });
+                }
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return points;
+        }
+
+        function getLockCoordinates() {
             let points = [];
+            clickZones = [];
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const isMobile = canvas.width < 600;
+            const spacing = isMobile ? canvas.width * 0.13 : 80;
+            const startX = -(spacing * 2.5);
+            const digitSize = isMobile ? 35 : 60;
+            const arrowSize = digitSize * 0.6;
+            const verticalGap = digitSize * 1.4; // Más separación vertical
+
+            // Título subido más arriba y con gap 1 para máxima definición
+            const titlePoints = getTextCoordinates("FECHA ESPECIAL", centerX, centerY - (verticalGap * 2.5), isMobile ? 24 : 30, false);
+            // Densificar manualmente el título duplicando puntos cercanos (truco visual)
+            // O simplemente asegurarnos que getTextCoordinates use gap bajo para este caso.
+
+            points = points.concat(titlePoints);
+
+            passcode.forEach((digit, index) => {
+                let xPos = centerX + startX + (index * spacing);
+                if (index >= 2) xPos += spacing * 0.5;
+                if (index >= 4) xPos += spacing * 0.5;
+
+                const digitPoints = getTextCoordinates(digit.toString(), xPos, centerY, digitSize, false);
+                points = points.concat(digitPoints);
+
+                const upArrowPoints = getTextCoordinates("▲", xPos, centerY - verticalGap, arrowSize, false);
+                points = points.concat(upArrowPoints);
+                clickZones.push({ x: xPos - arrowSize, y: centerY - verticalGap - arrowSize, w: arrowSize * 2, h: arrowSize * 2, index: index, action: 'up' });
+
+                const downArrowPoints = getTextCoordinates("▼", xPos, centerY + verticalGap, arrowSize, false);
+                points = points.concat(downArrowPoints);
+                clickZones.push({ x: xPos - arrowSize, y: centerY + verticalGap - arrowSize, w: arrowSize * 2, h: arrowSize * 2, index: index, action: 'down' });
+            });
+            return points;
+        }
+
+        function getHeartCoordinates(count) {
+            const points = [];
+            const scale = Math.min(canvas.width, canvas.height) / (canvas.width < 600 ? 35 : 25);
             for (let i = 0; i < count; i++) {
                 let t = Math.random() * Math.PI * 2;
                 let x = 16 * Math.pow(Math.sin(t), 3);
                 let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-
-                let r = Math.sqrt(Math.random());
-                let tx = x * r * 15 * heartSizeScale;
-                let ty = y * r * 15 * heartSizeScale;
-                let thickness = 10 * heartSizeScale * (1 - r * 0.5);
-                let tz = (Math.random() - 0.5) * thickness * 30;
-
-                points.push({ x: tx, y: ty, z: tz });
+                let px = (x * scale) + canvas.width / 2;
+                let py = (y * scale) + canvas.height / 2;
+                let pz = Math.random() * 500 + 100;
+                points.push({ x: px, y: py, z: pz, isBackgroundHeart: true });
             }
             return points;
         }
 
-        // --- 2. Generar Puntos de Texto ---
-        function calculateTextTargets(textContent) {
-            let points = [];
-            if (canvas.width <= 0 || canvas.height <= 0) return points;
-
-            const fontSize = Math.min(canvas.width * 0.12, 100);
-            ctx.font = `900 ${fontSize}px Verdana`;
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            const lines = textContent.split('\n');
-            const lineHeight = fontSize * 1.1;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            let startY = canvas.height * 0.4;
-
-            lines.forEach((line, i) => {
-                ctx.fillText(line, canvas.width / 2, startY + (i * lineHeight));
-            });
-
-            const gap = 4;
-            try {
-                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imgData.data;
-                for (let y = 0; y < canvas.height; y += gap) {
-                    for (let x = 0; x < canvas.width; x += gap) {
-                        if (data[(y * canvas.width + x) * 4 + 3] > 128) {
-                            points.push({
-                                x: x - canvas.width / 2,
-                                y: y - canvas.height / 2,
-                                z: 0
-                            });
-                        }
-                    }
-                }
-            } catch (e) { return points; }
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function getSphereCoordinates(count, radius) {
+            const points = [];
+            for (let i = 0; i < count; i++) {
+                const theta = Math.random() * 2 * Math.PI;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const x = radius * Math.sin(phi) * Math.cos(theta);
+                const y = radius * Math.sin(phi) * Math.sin(theta);
+                const z = radius * Math.cos(phi);
+                points.push({ x: x + canvas.width / 2, y: y + canvas.height / 2, z: z, isWorld: true });
+            }
             return points;
         }
 
-        // --- Clase Partícula ---
         class Particle {
-            constructor(heartTarget, questionTarget, answerTarget, btsTarget) {
-                // Objetivo Corazón
-                this.hx = heartTarget ? heartTarget.x : (Math.random() - 0.5) * canvas.width;
-                this.hy = heartTarget ? heartTarget.y : (Math.random() - 0.5) * canvas.height;
-                this.hz = heartTarget ? heartTarget.z : (Math.random() - 0.5) * 500;
-
-                // Objetivo Pregunta
-                this.qx = questionTarget ? questionTarget.x : this.hx;
-                this.qy = questionTarget ? questionTarget.y : this.hy;
-                this.qz = questionTarget ? questionTarget.z : this.hz;
-                this.hasQTarget = !!questionTarget;
-
-                // Objetivo Respuesta
-                this.ax = answerTarget ? answerTarget.x : this.hx;
-                this.ay = answerTarget ? answerTarget.y : this.hy;
-                this.az = answerTarget ? answerTarget.z : this.hz;
-                this.hasATarget = !!answerTarget;
-
-                // Objetivo BTS (Easter Egg)
-                this.bx = btsTarget ? btsTarget.x : this.hx;
-                this.by = btsTarget ? btsTarget.y : this.hy;
-                this.bz = btsTarget ? btsTarget.z : this.hz;
-                this.hasBTarget = !!btsTarget;
-
-                // Posición Dispersa Base
-                this.dx = (Math.random() - 0.5) * canvas.width * 1.5;
-                this.dy = (Math.random() - 0.5) * canvas.height * 1.5;
-                this.dz = (Math.random() - 0.5) * 1000;
-
-                // Iniciar en posición dispersa
-                this.x = this.dx;
-                this.y = this.dy;
-                this.z = this.dz;
-
-                // --- CAMBIO: AUMENTO DE TAMAÑO ---
-                // Original: Math.random() * 2 + 0.5;
-                // Nuevo: Math.random() * 3 + 1.5; (Mínimo 1.5px, Máximo 4.5px)
-                this.sizeBase = Math.random() * 3 + 1.5;
-
+            constructor(x, y) {
+                this.x = x; this.y = y; this.z = (Math.random() - 0.5) * 1000;
+                this.targetX = x; this.targetY = y; this.targetZ = this.z;
+                this.size = Math.random() * 3 + 2;
                 this.colorHue = Math.random() * 40 + 330;
-                this.saturation = '80%';
-                this.lightness = '60%';
+                this.colorSat = '80%'; this.colorLight = '50%';
             }
+            update() {
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                const dz = this.targetZ - this.z;
+                this.x += dx * 0.12;
+                this.y += dy * 0.12;
+                this.z += dz * 0.12;
 
-            draw(scale, screenX, screenY) {
-                let alpha = scale * 0.8;
-                let l = this.lightness;
-                let s = this.saturation;
-                let h = this.colorHue;
-
-                if (isFingerHeart && this.hasBTarget) {
-                    // BTS Mode: Púrpura brillante
-                    h = 270; s = '100%'; l = '65%';
-                } else if (isThumbsUp && this.hasATarget) {
-                    h = 350; s = '100%'; l = '70%';
-                } else if (isHandOpen && this.hasQTarget) {
-                    l = '90%'; s = '20%';
+                if (this.isWorldParticle) {
+                    const angle = 0.01; const cx = canvas.width / 2; const cz = 0;
+                    const x = this.x - cx; const z = this.z - cz;
+                    this.x = x * Math.cos(angle) - z * Math.sin(angle) + cx;
+                    this.z = x * Math.sin(angle) + z * Math.cos(angle) + cz;
                 }
+            }
+            draw() {
+                const perspective = 800;
+                const scale = perspective / (perspective + this.z);
+                if (scale < 0.1) return;
+                const screenX = (this.x - canvas.width / 2) * scale + canvas.width / 2;
+                const screenY = (this.y - canvas.height / 2) * scale + canvas.height / 2;
+                const s = this.size * scale;
+                if (s < 0.5) return;
 
-                ctx.fillStyle = `hsla(${h}, ${s}, ${l}, ${alpha})`;
+                ctx.fillStyle = `hsla(${this.colorHue}, ${this.colorSat}, ${this.colorLight}, ${scale})`;
                 ctx.beginPath();
-                ctx.arc(screenX, screenY, this.sizeBase * scale, 0, Math.PI * 2);
+                ctx.moveTo(screenX, screenY + s * 0.2);
+                ctx.bezierCurveTo(screenX - s / 2, screenY - s / 2, screenX - s, screenY + s / 3, screenX, screenY + s);
+                ctx.bezierCurveTo(screenX + s, screenY + s / 3, screenX + s / 2, screenY - s / 2, screenX, screenY + s * 0.2);
                 ctx.fill();
             }
+        }
 
-            update() {
-                let tx, ty, tz;
-
-                if (!isHandsDetected) {
-                    tx = this.dx; ty = this.dy; tz = this.dz;
-                } else if (isFingerHeart) {
-                    // MODO BTS
-                    if (this.hasBTarget) {
-                        tx = this.bx; ty = this.by; tz = this.bz;
-                    } else {
-                        tx = this.hx * 2; ty = this.hy * 2; tz = this.hz;
-                    }
-                } else if (isThumbsUp) {
-                    // MODO RESPUESTA
-                    if (this.hasATarget) {
-                        tx = this.ax; ty = this.ay; tz = this.az;
-                    } else {
-                        tx = this.hx * 2; ty = this.hy * 2; tz = this.hz;
-                    }
-                } else if (isHandOpen) {
-                    // MODO PREGUNTA
-                    if (this.hasQTarget) {
-                        tx = this.qx; ty = this.qy; tz = this.qz;
-                    } else {
-                        tx = this.hx * 2; ty = this.hy * 2; tz = this.hz;
-                    }
-                } else {
-                    // NEUTRO
-                    tx = this.hx; ty = this.hy; tz = this.hz;
-                }
-
-                this.x += (tx - this.x) * 0.08;
-                this.y += (ty - this.y) * 0.08;
-                this.z += (tz - this.z) * 0.08;
-
-                this.x += (Math.random() - 0.5) * 0.5;
-                this.y += (Math.random() - 0.5) * 0.5;
-
-                let cos = Math.cos(angleY);
-                let sin = Math.sin(angleY);
-                let rx = this.x * cos - this.z * sin;
-                let rz = this.x * sin + this.z * cos;
-
-                let scale = perspective / (perspective + rz + 1000);
-                let screenX = rx * scale + canvas.width / 2;
-                let screenY = this.y * scale + canvas.height / 2;
-
-                this.draw(scale, screenX, screenY);
+        function initParticles(count) {
+            particles = [];
+            const isMobile = canvas.width < 600;
+            const finalCount = isMobile ? 1200 : 2500;
+            for (let i = 0; i < finalCount; i++) {
+                particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
             }
         }
 
-        function initSystem() {
-            particlesArray = [];
+        function initLockState() {
+            currentState = 'lock';
+            updateBackgroundHeart(0);
+        }
 
-            let questionPoints = calculateTextTargets("¿QUIERES SER\nMI SAN VALENTÍN?");
-            let answerPoints = calculateTextTargets("TE AMO\n❤");
-            let btsPoints = calculateTextTargets("I PURPLE YOU\n💜"); // Easter Egg Text
-
-            let maxCount = Math.max(questionPoints.length, answerPoints.length, btsPoints.length, 2500);
-            let heartPoints = calculateHeartTargets(maxCount);
-
-            for (let i = 0; i < maxCount; i++) {
-                let hT = heartPoints[i];
-                let qT = questionPoints[i] || null;
-                let aT = answerPoints[i] || null;
-                let bT = btsPoints[i] || null;
-                particlesArray.push(new Particle(hT, qT, aT, bT));
+        function checkLockClick(x, y) {
+            for (let z of clickZones) {
+                if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h) {
+                    changeDigit(z.index, z.action); return;
+                }
             }
+        }
+
+        function changeDigit(index, action) {
+            passcode[index] = action === 'up' ? (passcode[index] + 1) % 10 : (passcode[index] - 1 + 10) % 10;
+            particles.forEach(p => { if (p.colorSat === '0%') p.z -= 50; });
+            checkCode();
+        }
+
+        function updateBackgroundHeart(correctCount) {
+            const lockTargets = getLockCoordinates();
+            const spareParticles = particles.length - lockTargets.length;
+            const heartParticleCount = Math.floor((correctCount / 6) * spareParticles * 0.9);
+            let heartTargets = [];
+            if (heartParticleCount > 0) heartTargets = getHeartCoordinates(heartParticleCount);
+            const finalTargets = lockTargets.concat(heartTargets);
+            assignTargets(finalTargets, false, { progressiveHeart: true });
+        }
+
+        function checkCode() {
+            let newCorrectCount = 0;
+            passcode.forEach((val, index) => { if (val === correctCode[index]) newCorrectCount++; });
+            currentCorrectDigits = newCorrectCount;
+            if (currentCorrectDigits === 6) {
+                currentState = 'success';
+                updateBackgroundHeart(6);
+                setTimeout(() => {
+                    particles.forEach(p => { if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = 350; p.colorSat = '100%'; } });
+                    setTimeout(initStoryMode, 1000);
+                }, 1500);
+            } else {
+                updateBackgroundHeart(currentCorrectDigits);
+            }
+        }
+
+        function initStoryMode() {
+            currentState = 'story';
+            progressContainer.innerHTML = '';
+            storySequence.forEach((_, i) => {
+                const seg = document.createElement('div');
+                seg.className = 'progress-segment';
+                const fill = document.createElement('div');
+                fill.className = 'progress-fill';
+                fill.id = `fill-${i}`;
+                seg.appendChild(fill);
+                progressContainer.appendChild(seg);
+            });
+            progressContainer.style.opacity = 1;
+            navControls.style.opacity = 1;
+            storyIndex = 0;
+            loadStoryScene(0);
+        }
+
+        function loadStoryScene(index) {
+            for (let i = 0; i < storySequence.length; i++) {
+                const fill = document.getElementById(`fill-${i}`);
+                if (i < index) fill.style.width = '100%';
+                else if (i > index) fill.style.width = '0%';
+                else fill.style.width = '0%';
+            }
+
+            const scene = storySequence[index];
+            let targets = [];
+            const isMobile = canvas.width < 600;
+            const storyFontSize = isMobile ? 32 : 60; // Texto un poco más grande en móviles
+
+            if (scene.effect === 'world_grey' || scene.effect === 'world_color') {
+                const worldRadius = Math.min(canvas.width, canvas.height) / (isMobile ? 3 : 3.5);
+                targets = getSphereCoordinates(isMobile ? 1200 : 2000, worldRadius);
+                const textPoints = getTextCoordinates(scene.text, canvas.width / 2, canvas.height / 2, storyFontSize * 0.9, true);
+                textPoints.forEach(p => p.z -= 300);
+                targets = targets.concat(textPoints);
+            } else {
+                targets = getTextCoordinates(scene.text, canvas.width / 2, canvas.height / 2, storyFontSize, true);
+            }
+
+            const options = { effect: scene.effect };
+            assignTargets(targets, false, options);
+
+            const currentFill = document.getElementById(`fill-${index}`);
+            currentFill.style.transition = `width ${scene.time}ms linear`;
+            setTimeout(() => { currentFill.style.width = '100%'; }, 50);
+
+            clearTimeout(storyTimer);
+            storyTimer = setTimeout(() => {
+                if (index < storySequence.length - 1) {
+                    storyIndex++;
+                    loadStoryScene(storyIndex);
+                } else {
+                    endStoryMode();
+                }
+            }, scene.time);
+        }
+
+        function endStoryMode() {
+            currentState = 'pre_question';
+            progressContainer.style.opacity = 0;
+            navControls.style.opacity = 0;
+            particles.forEach(p => {
+                p.targetX = Math.random() * canvas.width;
+                p.targetY = Math.random() * canvas.height;
+            });
+            setTimeout(() => { revealBtn.classList.add('visible'); }, 500);
+        }
+
+        function showFinalQuestion() {
+            currentState = 'question';
+            clickZones = [];
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const isMobile = canvas.width < 600;
+
+            let targets = getTextCoordinates("¿QUIERES SER\nMI SAN VALENTÍN?", centerX, centerY - 100, isMobile ? 35 : 60, true);
+
+            const yesX = centerX - (isMobile ? 80 : 150);
+            const btnY = centerY + 100;
+            const yesPoints = getTextCoordinates("SÍ", yesX, btnY, 50, false);
+            yesPoints.forEach(p => { p.isBtn = true; p.btnType = 'yes'; });
+            targets = targets.concat(yesPoints);
+            clickZones.push({ x: yesX - 60, y: btnY - 40, w: 120, h: 80, action: 'yes' });
+
+            const noX = centerX + (isMobile ? 80 : 150);
+            const noPoints = getTextCoordinates("NO", noX, btnY, 50, false);
+            noPoints.forEach(p => { p.isBtn = true; p.btnType = 'no'; });
+            targets = targets.concat(noPoints);
+            clickZones.push({ x: noX - 60, y: btnY - 40, w: 120, h: 80, action: 'no' });
+
+            const heartPoints = getHeartCoordinates(1500);
+            targets = targets.concat(heartPoints);
+
+            assignTargets(targets, false, { isQuestion: true });
+        }
+
+        function checkQuestionClick(x, y) {
+            for (let z of clickZones) {
+                if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h) {
+                    if (z.action === 'yes') celebrate();
+                    if (z.action === 'no') disperseParticles();
+                }
+            }
+        }
+
+        function disperseParticles() {
+            particles.forEach(p => {
+                p.vx = (Math.random() - 0.5) * 50;
+                p.vy = (Math.random() - 0.5) * 50;
+                p.targetX += p.vx * 10;
+                p.targetY += p.vy * 10;
+                p.colorSat = '0%';
+            });
+            setTimeout(showFinalQuestion, 2000);
+        }
+
+        function celebrate() {
+            currentState = 'celebration';
+            clickZones = [];
+            particles.forEach(p => {
+                p.targetX = Math.random() * canvas.width;
+                p.targetY = Math.random() * canvas.height;
+                p.targetZ = (Math.random() - 0.5) * 2000;
+                p.colorHue = Math.random() * 360;
+                p.colorSat = '100%'; p.colorLight = '60%';
+            });
+            setTimeout(() => {
+                const finalTargets = getTextCoordinates("¡TE AMO! ❤️", canvas.width / 2, canvas.height / 2, 80);
+                const heartBg = getHeartCoordinates(2000);
+                assignTargets(finalTargets.concat(heartBg), true);
+            }, 1000);
+        }
+
+        function assignTargets(targets, isFinalTheme, options = {}) {
+            if (targets.length > particles.length) {
+                const missing = targets.length - particles.length;
+                for (let i = 0; i < missing; i++) particles.push(new Particle(canvas.width / 2, canvas.height / 2));
+            }
+
+            particles.forEach((p, i) => {
+                p.isWorldParticle = false;
+                if (i < targets.length) {
+                    p.targetX = targets[i].x; p.targetY = targets[i].y; p.targetZ = targets[i].z || 0;
+
+                    if (options.isQuestion) {
+                        if (targets[i].isBtn) {
+                            p.colorHue = targets[i].btnType === 'yes' ? 120 : 0;
+                            p.colorSat = '100%'; p.colorLight = '60%';
+                        } else if (targets[i].isBackgroundHeart) {
+                            p.colorHue = 340; p.colorSat = '100%'; p.colorLight = '40%';
+                        } else {
+                            p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%';
+                        }
+                    }
+                    else if (isFinalTheme) {
+                        p.colorHue = targets[i].isBackgroundHeart ? 340 : 360; p.colorSat = '100%'; p.colorLight = '60%';
+                    }
+                    else if (options.effect === 'world_grey') {
+                        if (targets[i].isWorld) { p.isWorldParticle = true; p.colorHue = 0; p.colorSat = '0%'; p.colorLight = Math.random() * 50 + 20 + '%'; }
+                        else { p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%'; }
+                    }
+                    else if (options.effect === 'world_color') {
+                        if (targets[i].isWorld) { p.isWorldParticle = true; p.colorHue = Math.random() * 360; p.colorSat = '80%'; p.colorLight = '60%'; }
+                        else { p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%'; }
+                    }
+                    else if (options.progressiveHeart) {
+                        if (targets[i].isBackgroundHeart) { p.colorHue = 350; p.colorSat = '90%'; p.colorLight = '55%'; }
+                        else { p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%'; }
+                    }
+                    else {
+                        p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%';
+                    }
+                } else {
+                    p.targetX = Math.random() * canvas.width; p.targetY = Math.random() * canvas.height; p.targetZ = (Math.random() - 0.5) * 2000;
+                    p.colorHue = Math.random() * 40 + 330; p.colorSat = '80%'; p.colorLight = '35%';
+                }
+            });
         }
 
         function animate() {
-            ctx.fillStyle = 'rgba(5, 5, 5, 0.25)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            particlesArray.sort((a, b) => b.z - a.z);
-            particlesArray.forEach(p => p.update());
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
 
-        // --- MEDIA PIPE ---
-        const videoElement = document.getElementById('input_video');
-        const statusMsg = document.getElementById('statusMsg');
-        const mainTitle = document.getElementById('mainTitle');
-        const instructionText = document.getElementById('instructionText');
-        const btnRetry = document.getElementById('btnRetry');
-        let camera;
-
-        function onResults(results) {
-            let handsDetected = false;
-            let handOpenDetected = false;
-            let thumbsUpDetected = false;
-            let fingerHeartDetected = false;
-
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                handsDetected = true;
-
-                for (const landmarks of results.multiHandLandmarks) {
-                    const thumbTip = landmarks[4];
-                    const indexTip = landmarks[8];
-                    const middleTip = landmarks[12];
-                    const ringTip = landmarks[16];
-                    const pinkyTip = landmarks[20];
-
-                    const thumbIP = landmarks[3];
-                    const indexPIP = landmarks[6];
-                    const middlePIP = landmarks[10];
-                    const ringPIP = landmarks[14];
-                    const pinkyPIP = landmarks[18];
-                    const indexMCP = landmarks[5];
-
-                    const isIndexExt = indexTip.y < indexPIP.y;
-                    const isMiddleExt = middleTip.y < middlePIP.y;
-                    const isRingExt = ringTip.y < ringPIP.y;
-                    const isPinkyExt = pinkyTip.y < pinkyPIP.y;
-
-                    if (isIndexExt && isMiddleExt && isRingExt && isPinkyExt) {
-                        handOpenDetected = true;
-                    }
-
-                    const isThumbUp = thumbTip.y < thumbIP.y;
-                    const areOthersCurled = !isIndexExt && !isMiddleExt && !isRingExt && !isPinkyExt;
-
-                    if (isThumbUp && areOthersCurled) {
-                        thumbsUpDetected = true;
-                    }
-
-                    const dThumbIndex = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
-                    const isIndexHigh = indexTip.y < indexMCP.y;
-
-                    if (dThumbIndex < 0.06 && isIndexHigh) {
-                        fingerHeartDetected = true;
-                    }
-                }
-            }
-
-            // Actualizar estado global
-            isHandsDetected = handsDetected;
-
-            // UI Logica - PRIORIDADES
-            if (!isHandsDetected) {
-                isHandOpen = false; isThumbsUp = false; isFingerHeart = false;
-                mainTitle.classList.remove('fade-out');
-                mainTitle.innerText = "Bienvenido";
-                statusMsg.innerText = "Acerca tu mano para comenzar la magia...";
-                statusMsg.style.color = "#ff69b4";
-                instructionText.innerHTML = "Extiende tu mano y <span>crea amor</span>";
-                return;
-            }
-
-            // GESTOS
-            if (fingerHeartDetected) {
-                if (!isFingerHeart) {
-                    isFingerHeart = true;
-                    isHandOpen = false; isThumbsUp = false;
-                    mainTitle.classList.add('fade-out');
-                    statusMsg.innerText = "¡Nuestro secreto especial! 💜";
-                    statusMsg.style.color = "#9b59b6";
-                    instructionText.innerHTML = "✨ I Purple You ✨ <span>Mi amor eterno</span>";
-                }
-            } else if (thumbsUpDetected) {
-                if (!isThumbsUp) {
-                    isThumbsUp = true;
-                    isHandOpen = false; isFingerHeart = false;
-                    mainTitle.classList.add('fade-out');
-                    statusMsg.innerText = "¡El 'Sí' más hermoso! ❤️";
-                    statusMsg.style.color = "#ff3366";
-                    instructionText.innerHTML = "Juntos para siempre <span>❤️</span>";
-                }
-            } else if (handOpenDetected) {
-                if (!isHandOpen) {
-                    isHandOpen = true;
-                    isThumbsUp = false; isFingerHeart = false;
-                    mainTitle.classList.add('fade-out');
-                    statusMsg.innerText = "Dime que sí...";
-                    statusMsg.style.color = "#ffffff";
-                    instructionText.innerHTML = "Si tu respuesta es Sí: <span>Haz 👍</span>";
-                }
-            } else {
-                if (isHandOpen || isThumbsUp || isFingerHeart || mainTitle.innerText === "Bienvenido") {
-                    isHandOpen = false; isThumbsUp = false; isFingerHeart = false;
-                    mainTitle.classList.add('fade-out');
-                    statusMsg.innerText = "Tu presencia forma mi corazón.";
-                    statusMsg.style.color = "#ff69b4";
-                    instructionText.innerHTML = "Para declararme: <span>Abre tu mano ✋</span>";
-                }
-            }
-        }
-
-        async function startCamera() {
-            btnRetry.style.display = 'none';
-            const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-            hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-            hands.onResults(onResults);
-            camera = new Camera(videoElement, {
-                onFrame: async () => { await hands.send({ image: videoElement }); },
-                width: 640, height: 480
-            });
-            try {
-                await camera.start();
-                statusMsg.innerText = "Cámara activa. Pon tu mano.";
-                instructionText.innerHTML = "Extiende tu mano y <span>crea amor</span>";
-                document.getElementById('cameraPreview').style.opacity = 1;
-            } catch (error) {
-                console.error(error);
-                statusMsg.innerText = "Necesitas dar permiso a la cámara.";
-                instructionText.innerHTML = "Error: <span>Activa la cámara</span>";
-                btnRetry.style.display = 'block';
-            }
-        }
-
-        initSystem();
+        initParticles(2000);
         animate();
-        window.onload = startCamera;
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            fontSize = Math.min(canvas.width * 0.12, 80);
+            if (currentState === 'lock') updateBackgroundHeart(currentCorrectDigits);
+        });
 
     </script>
 </body>
