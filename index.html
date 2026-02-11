@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nuestra Historia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,7 +16,7 @@
         body {
             overflow: hidden;
             background: #050505;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Montserrat', sans-serif;
             color: white;
             touch-action: none;
         }
@@ -29,14 +30,107 @@
             z-index: 1;
         }
 
+        /* --- Contenedores de Texto HTML --- */
+        .text-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            opacity: 0;
+        }
+
+        .text-overlay.visible {
+            opacity: 1;
+        }
+
+        h1,
+        h2 {
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #fff;
+            line-height: 1.4;
+        }
+
+        .highlight {
+            color: #ff3366;
+        }
+
+        /* --- Candado UI --- */
+        #lock-ui {
+            top: 30%;
+        }
+
+        #lock-title {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #aaa;
+        }
+
+        /* --- Historia UI --- */
+        #story-text {
+            font-size: 1.8rem;
+            font-weight: 300;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+        }
+
+        /* --- Pregunta Final UI --- */
+        #question-container {
+            pointer-events: auto;
+        }
+
+        .big-question {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            color: #fff;
+        }
+
+        .action-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-yes {
+            background: #ff3366;
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+        }
+
+        .btn-no {
+            background: #555;
+            color: #ccc;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
         /* --- UI General --- */
-        .ui-container {
+        .ui-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 10;
+            z-index: 30;
             pointer-events: none;
             display: flex;
             flex-direction: column;
@@ -46,7 +140,7 @@
         #progress-container {
             display: flex;
             gap: 5px;
-            padding: 10px 10px;
+            padding: 15px;
             width: 100%;
             opacity: 0;
             transition: opacity 0.5s;
@@ -55,7 +149,7 @@
         .progress-segment {
             flex: 1;
             height: 4px;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 2px;
             overflow: hidden;
         }
@@ -74,14 +168,14 @@
             transform: translateY(-50%);
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 10px;
             pointer-events: auto;
             opacity: 0;
         }
 
         .nav-btn {
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: none;
             color: white;
             width: 50px;
             height: 50px;
@@ -89,17 +183,10 @@
             font-size: 1.5rem;
             cursor: pointer;
             backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
         }
 
-        .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        #start-btn {
+        #start-btn,
+        #reveal-btn {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -111,37 +198,20 @@
             border: 2px solid #fff;
             border-radius: 50px;
             cursor: pointer;
-            z-index: 20;
+            z-index: 40;
             text-transform: uppercase;
             letter-spacing: 2px;
             pointer-events: auto;
             transition: all 0.5s;
-        }
-
-        #start-btn:hover {
-            background: #fff;
-            color: #d60000;
-            box-shadow: 0 0 30px rgba(255, 0, 50, 0.8);
+            font-family: 'Montserrat', sans-serif;
         }
 
         #reveal-btn {
-            position: absolute;
-            top: 60%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px 50px;
-            font-size: 1.5rem;
             background: #ff3366;
-            color: white;
             border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            z-index: 20;
+            top: 60%;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.5s;
-            box-shadow: 0 0 30px rgba(255, 51, 102, 0.5);
-            font-weight: bold;
         }
 
         #reveal-btn.visible {
@@ -149,32 +219,20 @@
             pointer-events: auto;
         }
 
-        #reveal-btn:hover {
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-
-        .hidden {
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-
-        /* Estilos del Contador Final */
+        /* Estilos del Contador Final (Centrado) */
         #countdown {
             position: absolute;
-            bottom: 20%;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            /* Centrado absoluto */
+            transform: translate(-50%, -50%);
             text-align: center;
             color: white;
             z-index: 20;
             opacity: 0;
             transition: opacity 1s;
-            pointer-events: none;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            /* Fondo semi-transparente para legibilidad sobre el corazón */
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
         }
 
         #countdown.visible {
@@ -182,40 +240,57 @@
         }
 
         .timer-label {
-            font-size: 0.9rem;
+            font-size: 1rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            color: #ff99aa;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            color: #fff;
+            font-weight: 300;
         }
 
         .timer {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: bold;
             font-family: monospace;
-            letter-spacing: 1px;
         }
 
         @media (max-width: 600px) {
-            #start-btn {
-                font-size: 1rem;
-                padding: 12px 30px;
+            h2 {
+                font-size: 1.5rem;
             }
 
-            #reveal-btn {
+            #story-text {
+                font-size: 1.4rem;
+            }
+
+            .big-question {
+                font-size: 1.8rem;
+            }
+
+            #lock-ui {
+                top: 25%;
+            }
+
+            #lock-title {
                 font-size: 1.2rem;
-                padding: 15px 30px;
-                width: 90%;
             }
 
-            #countdown {
-                bottom: 15%;
-                width: 90%;
+            .action-btn {
+                padding: 12px 30px;
+                font-size: 1rem;
+                display: block;
+                margin: 10px auto;
+                width: 80%;
             }
 
             .timer {
-                font-size: 1.2rem;
+                font-size: 1.5rem;
             }
+        }
+
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
     </style>
 </head>
@@ -224,7 +299,26 @@
 
     <canvas id="canvas1"></canvas>
 
-    <div class="ui-container">
+    <!-- UI Candado -->
+    <div id="lock-ui" class="text-overlay hidden">
+        <div id="lock-title">Ingresa nuestra<br><span style="color: #fff; font-weight: bold;">Fecha Especial</span>
+        </div>
+    </div>
+
+    <!-- UI Historia -->
+    <div id="story-container" class="text-overlay">
+        <h2 id="story-text"></h2>
+    </div>
+
+    <!-- UI Pregunta Final -->
+    <div id="question-container" class="text-overlay hidden">
+        <h1 class="big-question">¿Quieres ser mi San Valentín?</h1>
+        <button class="action-btn btn-yes" id="btn-yes-html">¡SÍ, QUIERO! ❤️</button>
+        <button class="action-btn btn-no" id="btn-no-html">No...</button>
+    </div>
+
+    <!-- UI Navegación -->
+    <div class="ui-layer">
         <div id="progress-container"></div>
         <div class="nav-controls" id="nav-controls">
             <button class="nav-btn" id="prev-btn">❮</button>
@@ -232,12 +326,11 @@
         </div>
     </div>
 
-    <button id="start-btn">Comenzar</button>
+    <button id="start-btn">Comenzar Historia</button>
     <button id="reveal-btn">¿Quieres saber qué sigue?</button>
 
-    <!-- Contenedor del Contador -->
     <div id="countdown">
-        <div class="timer-label">Próximo San Valentín</div>
+        <div class="timer-label">Solo queda este tiempo para vernos</div>
         <div class="timer" id="timer-val">00d 00h 00m 00s</div>
     </div>
 
@@ -249,78 +342,61 @@
 
         const startBtn = document.getElementById('start-btn');
         const revealBtn = document.getElementById('reveal-btn');
+        const lockUI = document.getElementById('lock-ui');
+        const storyContainer = document.getElementById('story-container');
+        const storyText = document.getElementById('story-text');
+        const questionContainer = document.getElementById('question-container');
+        const btnYes = document.getElementById('btn-yes-html');
+        const btnNo = document.getElementById('btn-no-html');
         const progressContainer = document.getElementById('progress-container');
         const navControls = document.getElementById('nav-controls');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
         const countdownEl = document.getElementById('countdown');
         const timerVal = document.getElementById('timer-val');
 
         let particles = [];
-        let fontSize = Math.min(canvas.width * 0.12, 80);
-
         let currentState = 'intro';
 
+        // --- Configuración Candado ---
         let passcode = [0, 0, 0, 0, 0, 0];
-
-        // CORRECCIÓN: Usar constructor con (Año, Mes-1, Día) para evitar problemas de zona horaria
-        // Meses van de 0 (Enero) a 11 (Diciembre). Julio es 6.
-        const startDate = new Date(2023, 6, 23); // 23 de Julio de 2023
-
-        // Extraer partes de la fecha para el código y el texto
+        const startDate = new Date(2023, 7, 23);
         const targetDay = startDate.getDate();
-        const targetMonth = startDate.getMonth() + 1; // 0-11 a 1-12
-        const targetYear = startDate.getFullYear() % 100; // últimos 2 dígitos
-
-        // Generar código correcto dinámicamente [D, D, M, M, A, A]
-        const d1 = Math.floor(targetDay / 10);
-        const d2 = targetDay % 10;
-        const m1 = Math.floor(targetMonth / 10);
-        const m2 = targetMonth % 10;
-        const y1 = Math.floor(targetYear / 10);
-        const y2 = targetYear % 10;
-
-        const correctCode = [d1, d2, m1, m2, y1, y2];
-
+        const targetMonth = startDate.getMonth() + 1;
+        const targetYear = startDate.getFullYear() % 100;
+        const correctCode = [Math.floor(targetDay / 10), targetDay % 10, Math.floor(targetMonth / 10), targetMonth % 10, Math.floor(targetYear / 10), targetYear % 10];
         let clickZones = [];
         let currentCorrectDigits = 0;
 
-        // Cálculos de fecha para la historia
+        // --- Configuración Historia ---
         const today = new Date();
         const diffTime = Math.abs(today - startDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
         const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        const formattedDateStr = `${startDate.getDate()} de ${monthsNames[startDate.getMonth()]}\ndel ${startDate.getFullYear()}`;
+        const formattedDateStr = `${startDate.getDate()} de ${monthsNames[startDate.getMonth()]} del ${startDate.getFullYear()}`;
 
-        // Textos actualizados con fecha dinámica
         const storySequence = [
-            { text: "Dicen que los días\nimportantes no siempre\nvienen anunciados...", time: 6000 },
-            { text: `Pero el ${formattedDateStr}\nfue la excepción.`, time: 6000 },
-            { text: "Fue el momento exacto\nen el que el mundo\ndejó de ser un\nlugar ordinario...", time: 6000, effect: 'world_grey' },
-            { text: "Para llenarse de colores\nque solo tú\nsabes pintar.", time: 6000, effect: 'world_color' },
-            { text: "Ese día no solo aceptamos\ncaminar juntos;\ndecidimos que\ncualquier camino...", time: 6000 },
-            { text: "Si es contigo,\nvale la pena.", time: 5000 },
-            { text: `Hoy, ${diffDays} días después...`, time: 5000 },
-            { text: "Sigo eligiendo esa\nmisma fecha como el\ninicio de mi mejor historia.", time: 6000 }
+            { text: "Dicen que los días importantes no siempre vienen anunciados con fanfarrias...", time: 6000 },
+            { text: `Pero el <span class="highlight">${formattedDateStr}</span> fue la excepción.`, time: 6000 },
+            { text: "Fue el momento exacto en el que el mundo dejó de ser un lugar ordinario...", time: 6000, effect: 'world_grey' },
+            { text: "Para llenarse de colores que solo tú sabes pintar.", time: 6000, effect: 'world_color' },
+            { text: "Ese día no solo aceptamos caminar juntos; decidimos que cualquier camino, si es contigo, vale la pena.", time: 7000 },
+            { text: `Hoy, <span class="highlight">${diffDays} días después</span>, sigo eligiendo esa misma fecha como el inicio de mi mejor historia.`, time: 7000 }
         ];
 
         let storyIndex = -1;
         let storyTimer = null;
+        let heartBeatScale = 1; // Variable para el latido
 
-        const mouse = { x: null, y: null, radius: 30 };
+        const mouse = { x: null, y: null, radius: 40 };
         window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
-
-        // Manejo de Clics (PC)
-        window.addEventListener('click', (e) => {
-            if (e.target.tagName === 'BUTTON') return;
-            const x = e.clientX;
-            const y = e.clientY;
-            if (currentState === 'lock') checkLockClick(x, y);
-            else if (currentState === 'question') checkQuestionClick(x, y);
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
         });
 
-        // Manejo de Touch (Móvil)
+        window.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (currentState === 'lock') checkLockClick(e.clientX, e.clientY);
+        });
+
         window.addEventListener('touchstart', (e) => {
             if (e.target.tagName === 'BUTTON') return;
             if (e.cancelable) e.preventDefault();
@@ -328,7 +404,6 @@
             const y = e.touches[0].clientY;
             mouse.x = x; mouse.y = y;
             if (currentState === 'lock') checkLockClick(x, y);
-            if (currentState === 'question') checkQuestionClick(x, y);
         }, { passive: false });
 
         startBtn.addEventListener('click', () => {
@@ -341,61 +416,30 @@
             showFinalQuestion();
         });
 
-        prevBtn.addEventListener('click', () => {
-            if (storyIndex > 0) {
-                clearTimeout(storyTimer);
-                storyIndex--;
-                loadStoryScene(storyIndex);
-            }
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (storyIndex > 0) { clearTimeout(storyTimer); storyIndex--; loadStoryScene(storyIndex); }
         });
 
-        nextBtn.addEventListener('click', () => {
-            if (storyIndex < storySequence.length - 1) {
-                clearTimeout(storyTimer);
-                storyIndex++;
-                loadStoryScene(storyIndex);
-            } else {
-                clearTimeout(storyTimer);
-                endStoryMode();
-            }
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (storyIndex < storySequence.length - 1) { clearTimeout(storyTimer); storyIndex++; loadStoryScene(storyIndex); }
+            else { clearTimeout(storyTimer); endStoryMode(); }
         });
 
-        function wrapText(context, text, maxWidth) {
-            const words = text.replace(/\n/g, " \n ").split(' ');
-            let lines = [];
-            let currentLine = words[0];
-            for (let i = 1; i < words.length; i++) {
-                let word = words[i];
-                if (word === "\n") { lines.push(currentLine); currentLine = ""; continue; }
-                let width = context.measureText(currentLine + " " + word).width;
-                if (width < maxWidth) { currentLine += (currentLine === "" ? "" : " ") + word; }
-                else { lines.push(currentLine); currentLine = word; }
-            }
-            if (currentLine.trim() !== "") lines.push(currentLine);
-            return lines;
-        }
+        btnYes.addEventListener('click', celebrate);
 
-        function getTextCoordinates(text, x, y, size, useMaxWidth = true) {
-            const isMobile = canvas.width < 600;
-            const actualSize = isMobile ? size * 0.8 : size;
-            ctx.font = `900 ${actualSize}px Arial`;
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+        btnNo.addEventListener('click', () => {
+            particles.forEach(p => { p.vx = (Math.random() - 0.5) * 20; p.vy = (Math.random() - 0.5) * 20; });
+            alert("¡Esa opción no es válida! Inténtalo de nuevo 😉");
+        });
+
+        // --- Generadores de Partículas ---
+
+        function getNumberPoints(text, x, y, size) {
+            ctx.font = `900 ${size}px Arial`;
+            ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            let lines = [];
-            if (useMaxWidth) {
-                const maxWidth = canvas.width * 0.9;
-                lines = wrapText(ctx, text, maxWidth);
-            } else { lines = text.split('\n'); }
-
-            const lineHeight = actualSize * 1.3;
-            const startY = y - ((lines.length - 1) * lineHeight) / 2;
-
-            lines.forEach((line, i) => { ctx.fillText(line, x, startY + (i * lineHeight)); });
-
-            const gap = isMobile ? 2 : 2;
+            ctx.fillText(text, x, y);
+            const gap = canvas.width < 600 ? 3 : 2;
             const points = [];
             const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
             for (let py = 0; py < canvas.height; py += gap) {
@@ -413,30 +457,22 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const isMobile = canvas.width < 600;
-            const spacing = isMobile ? canvas.width * 0.13 : 80;
+            const spacing = isMobile ? canvas.width * 0.14 : 90;
             const startX = -(spacing * 2.5);
-            const digitSize = isMobile ? 35 : 60;
+            const digitSize = isMobile ? 40 : 70;
             const arrowSize = digitSize * 0.6;
-            const verticalGap = digitSize * 1.4;
-
-            const titlePoints = getTextCoordinates("FECHA ESPECIAL", centerX, centerY - (verticalGap * 2.5), isMobile ? 24 : 30, false);
-
-            points = points.concat(titlePoints);
+            const verticalGap = digitSize * 1.2;
 
             passcode.forEach((digit, index) => {
                 let xPos = centerX + startX + (index * spacing);
                 if (index >= 2) xPos += spacing * 0.5;
                 if (index >= 4) xPos += spacing * 0.5;
 
-                const digitPoints = getTextCoordinates(digit.toString(), xPos, centerY, digitSize, false);
-                points = points.concat(digitPoints);
+                points = points.concat(getNumberPoints(digit.toString(), xPos, centerY, digitSize));
+                points = points.concat(getNumberPoints("▲", xPos, centerY - verticalGap, arrowSize));
+                points = points.concat(getNumberPoints("▼", xPos, centerY + verticalGap, arrowSize));
 
-                const upArrowPoints = getTextCoordinates("▲", xPos, centerY - verticalGap, arrowSize, false);
-                points = points.concat(upArrowPoints);
                 clickZones.push({ x: xPos - arrowSize, y: centerY - verticalGap - arrowSize, w: arrowSize * 2, h: arrowSize * 2, index: index, action: 'up' });
-
-                const downArrowPoints = getTextCoordinates("▼", xPos, centerY + verticalGap, arrowSize, false);
-                points = points.concat(downArrowPoints);
                 clickZones.push({ x: xPos - arrowSize, y: centerY + verticalGap - arrowSize, w: arrowSize * 2, h: arrowSize * 2, index: index, action: 'down' });
             });
             return points;
@@ -444,7 +480,8 @@
 
         function getHeartCoordinates(count) {
             const points = [];
-            const scale = Math.min(canvas.width, canvas.height) / (canvas.width < 600 ? 35 : 25);
+            // Escala aumentada para rodear el contador
+            const scale = Math.min(canvas.width, canvas.height) / (canvas.width < 600 ? 25 : 18);
             for (let i = 0; i < count; i++) {
                 let t = Math.random() * Math.PI * 2;
                 let x = 16 * Math.pow(Math.sin(t), 3);
@@ -470,24 +507,30 @@
             return points;
         }
 
+        // --- CLASE PARTÍCULA ---
         class Particle {
             constructor(x, y) {
                 this.x = x; this.y = y; this.z = (Math.random() - 0.5) * 1000;
                 this.targetX = x; this.targetY = y; this.targetZ = this.z;
+                this.vx = 0; this.vy = 0;
                 this.size = Math.random() * 3 + 2;
                 this.colorHue = Math.random() * 40 + 330;
                 this.colorSat = '80%'; this.colorLight = '50%';
+                this.isHeartParticle = false; // Flag para aplicar latido
             }
             update() {
                 const dx = this.targetX - this.x;
                 const dy = this.targetY - this.y;
                 const dz = this.targetZ - this.z;
-                this.x += dx * 0.12;
-                this.y += dy * 0.12;
-                this.z += dz * 0.12;
+                this.x += dx * 0.1;
+                this.y += dy * 0.1;
+                this.z += dz * 0.1;
+
+                this.x += this.vx; this.y += this.vy;
+                this.vx *= 0.9; this.vy *= 0.9;
 
                 if (this.isWorldParticle) {
-                    const angle = 0.01; const cx = canvas.width / 2; const cz = 0;
+                    const angle = 0.005; const cx = canvas.width / 2; const cz = 0;
                     const x = this.x - cx; const z = this.z - cz;
                     this.x = x * Math.cos(angle) - z * Math.sin(angle) + cx;
                     this.z = x * Math.sin(angle) + z * Math.cos(angle) + cz;
@@ -497,8 +540,19 @@
                 const perspective = 800;
                 const scale = perspective / (perspective + this.z);
                 if (scale < 0.1) return;
-                const screenX = (this.x - canvas.width / 2) * scale + canvas.width / 2;
-                const screenY = (this.y - canvas.height / 2) * scale + canvas.height / 2;
+
+                let screenX = (this.x - canvas.width / 2) * scale + canvas.width / 2;
+                let screenY = (this.y - canvas.height / 2) * scale + canvas.height / 2;
+
+                // Aplicar Latido si es partícula de corazón final
+                if (this.isHeartParticle && currentState === 'celebration') {
+                    // Desplazamiento desde el centro escalado por el latido
+                    const cx = canvas.width / 2;
+                    const cy = canvas.height / 2;
+                    screenX = cx + (screenX - cx) * heartBeatScale;
+                    screenY = cy + (screenY - cy) * heartBeatScale;
+                }
+
                 const s = this.size * scale;
                 if (s < 0.5) return;
 
@@ -520,8 +574,12 @@
             }
         }
 
+        // --- Estados y Lógica ---
+
         function initLockState() {
             currentState = 'lock';
+            lockUI.classList.remove('hidden');
+            lockUI.classList.add('visible');
             updateBackgroundHeart(0);
         }
 
@@ -542,26 +600,30 @@
         function updateBackgroundHeart(correctCount) {
             const lockTargets = getLockCoordinates();
             const spareParticles = particles.length - lockTargets.length;
-            const heartParticleCount = Math.floor((correctCount / 6) * spareParticles * 0.9);
+            const heartParticleCount = Math.floor((correctCount / 6) * spareParticles * 0.95);
             let heartTargets = [];
             if (heartParticleCount > 0) heartTargets = getHeartCoordinates(heartParticleCount);
+
             const finalTargets = lockTargets.concat(heartTargets);
-            assignTargets(finalTargets, false, { progressiveHeart: true });
+            assignTargets(finalTargets, { progressiveHeart: true });
         }
 
         function checkCode() {
             let newCorrectCount = 0;
             passcode.forEach((val, index) => { if (val === correctCode[index]) newCorrectCount++; });
-            currentCorrectDigits = newCorrectCount;
-            if (currentCorrectDigits === 6) {
+
+            if (newCorrectCount === 6) {
                 currentState = 'success';
                 updateBackgroundHeart(6);
+                lockUI.classList.remove('visible');
                 setTimeout(() => {
-                    particles.forEach(p => { if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = 350; p.colorSat = '100%'; } });
+                    particles.forEach(p => {
+                        if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = 350; p.colorSat = '100%'; }
+                    });
                     setTimeout(initStoryMode, 1000);
                 }, 1500);
             } else {
-                updateBackgroundHeart(currentCorrectDigits);
+                updateBackgroundHeart(newCorrectCount);
             }
         }
 
@@ -592,22 +654,20 @@
             }
 
             const scene = storySequence[index];
+            storyText.innerHTML = scene.text;
+            storyContainer.classList.remove('visible');
+            setTimeout(() => { storyContainer.classList.add('visible'); }, 200);
+
             let targets = [];
             const isMobile = canvas.width < 600;
-            const storyFontSize = isMobile ? 32 : 60;
 
             if (scene.effect === 'world_grey' || scene.effect === 'world_color') {
                 const worldRadius = Math.min(canvas.width, canvas.height) / (isMobile ? 3 : 3.5);
                 targets = getSphereCoordinates(isMobile ? 1200 : 2000, worldRadius);
-                const textPoints = getTextCoordinates(scene.text, canvas.width / 2, canvas.height / 2, storyFontSize * 0.9, true);
-                textPoints.forEach(p => p.z -= 300);
-                targets = targets.concat(textPoints);
-            } else {
-                targets = getTextCoordinates(scene.text, canvas.width / 2, canvas.height / 2, storyFontSize, true);
             }
 
             const options = { effect: scene.effect };
-            assignTargets(targets, false, options);
+            assignTargets(targets, options);
 
             const currentFill = document.getElementById(`fill-${index}`);
             currentFill.style.transition = `width ${scene.time}ms linear`;
@@ -628,84 +688,29 @@
             currentState = 'pre_question';
             progressContainer.style.opacity = 0;
             navControls.style.opacity = 0;
+            storyContainer.classList.remove('visible');
             particles.forEach(p => {
                 p.targetX = Math.random() * canvas.width;
                 p.targetY = Math.random() * canvas.height;
+                p.isWorldParticle = false;
             });
             setTimeout(() => { revealBtn.classList.add('visible'); }, 500);
         }
 
         function showFinalQuestion() {
             currentState = 'question';
-            clickZones = [];
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const isMobile = canvas.width < 600;
+            questionContainer.classList.remove('hidden');
+            setTimeout(() => { questionContainer.classList.add('visible'); }, 100);
 
-            let targets = getTextCoordinates("¿QUIERES SER\nMI SAN VALENTÍN?", centerX, centerY - 100, isMobile ? 35 : 60, true);
-
-            const yesX = centerX - (isMobile ? 80 : 150);
-            const btnY = centerY + 100;
-            const yesPoints = getTextCoordinates("SÍ", yesX, btnY, 50, false);
-            yesPoints.forEach(p => { p.isBtn = true; p.btnType = 'yes'; });
-            targets = targets.concat(yesPoints);
-            clickZones.push({ x: yesX - 60, y: btnY - 40, w: 120, h: 80, action: 'yes' });
-
-            const noX = centerX + (isMobile ? 80 : 150);
-            const noPoints = getTextCoordinates("NO", noX, btnY, 50, false);
-            noPoints.forEach(p => { p.isBtn = true; p.btnType = 'no'; });
-            targets = targets.concat(noPoints);
-            clickZones.push({ x: noX - 60, y: btnY - 40, w: 120, h: 80, action: 'no' });
-
-            const heartPoints = getHeartCoordinates(1500);
-            targets = targets.concat(heartPoints);
-
-            assignTargets(targets, false, { isQuestion: true });
-        }
-
-        function checkQuestionClick(x, y) {
-            for (let z of clickZones) {
-                if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h) {
-                    if (z.action === 'yes') celebrate();
-                    if (z.action === 'no') disperseParticles();
-                }
-            }
-        }
-
-        function disperseParticles() {
-            particles.forEach(p => {
-                p.vx = (Math.random() - 0.5) * 50;
-                p.vy = (Math.random() - 0.5) * 50;
-                p.targetX += p.vx * 10;
-                p.targetY += p.vy * 10;
-                p.colorSat = '0%';
-            });
-            setTimeout(showFinalQuestion, 2000);
-        }
-
-        function startCountdown() {
-            countdownEl.classList.add('visible');
-            const updateTimer = () => {
-                const now = new Date();
-                const currentYear = now.getFullYear();
-                let valentine = new Date(currentYear, 1, 14); // Mes 1 es Febrero
-                if (now > valentine) valentine = new Date(currentYear + 1, 1, 14);
-
-                const diff = valentine - now;
-                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-                const m = Math.floor((diff / 1000 / 60) % 60);
-                const s = Math.floor((diff / 1000) % 60);
-
-                timerVal.innerText = `${d}d ${h}h ${m}m ${s}s`;
-            };
-            setInterval(updateTimer, 1000);
-            updateTimer();
+            const heartPoints = getHeartCoordinates(2000);
+            assignTargets(heartPoints, { isFinalHeart: true });
         }
 
         function celebrate() {
             currentState = 'celebration';
-            clickZones = [];
+            questionContainer.classList.remove('visible');
+            setTimeout(() => { questionContainer.classList.add('hidden'); }, 500);
+
             particles.forEach(p => {
                 p.targetX = Math.random() * canvas.width;
                 p.targetY = Math.random() * canvas.height;
@@ -715,15 +720,30 @@
             });
 
             setTimeout(() => {
-                const finalTargets = getTextCoordinates("¡TE AMO! ❤️", canvas.width / 2, canvas.height / 2, 80);
                 const heartBg = getHeartCoordinates(2000);
-                assignTargets(finalTargets.concat(heartBg), true);
-                // Iniciar contador
+                assignTargets(heartBg, { isFinalHeart: true });
                 startCountdown();
             }, 1000);
         }
 
-        function assignTargets(targets, isFinalTheme, options = {}) {
+        function startCountdown() {
+            countdownEl.classList.add('visible');
+            const updateTimer = () => {
+                const now = new Date();
+                let valentine = new Date(now.getFullYear(), 1, 14);
+                if (now > valentine) valentine = new Date(now.getFullYear() + 1, 1, 14);
+                const diff = valentine - now;
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const m = Math.floor((diff / 1000 / 60) % 60);
+                const s = Math.floor((diff / 1000) % 60);
+                timerVal.innerText = `${d}d ${h}h ${m}m ${s}s`;
+            };
+            setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        function assignTargets(targets, options = {}) {
             if (targets.length > particles.length) {
                 const missing = targets.length - particles.length;
                 for (let i = 0; i < missing; i++) particles.push(new Particle(canvas.width / 2, canvas.height / 2));
@@ -731,39 +751,34 @@
 
             particles.forEach((p, i) => {
                 p.isWorldParticle = false;
+                p.isHeartParticle = false; // Reset
+
                 if (i < targets.length) {
                     p.targetX = targets[i].x; p.targetY = targets[i].y; p.targetZ = targets[i].z || 0;
 
-                    if (options.isQuestion) {
-                        if (targets[i].isBtn) {
-                            p.colorHue = targets[i].btnType === 'yes' ? 120 : 0;
-                            p.colorSat = '100%'; p.colorLight = '60%';
-                        } else if (targets[i].isBackgroundHeart) {
-                            p.colorHue = 340; p.colorSat = '100%'; p.colorLight = '40%';
-                        } else {
-                            p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%';
-                        }
-                    }
-                    else if (isFinalTheme) {
-                        p.colorHue = targets[i].isBackgroundHeart ? 340 : 360; p.colorSat = '100%'; p.colorLight = '60%';
-                    }
-                    else if (options.effect === 'world_grey') {
-                        if (targets[i].isWorld) { p.isWorldParticle = true; p.colorHue = 0; p.colorSat = '0%'; p.colorLight = Math.random() * 50 + 20 + '%'; }
-                        else { p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%'; }
-                    }
-                    else if (options.effect === 'world_color') {
-                        if (targets[i].isWorld) { p.isWorldParticle = true; p.colorHue = Math.random() * 360; p.colorSat = '80%'; p.colorLight = '60%'; }
-                        else { p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%'; }
-                    }
-                    else if (options.progressiveHeart) {
+                    if (options.progressiveHeart) {
                         if (targets[i].isBackgroundHeart) { p.colorHue = 350; p.colorSat = '90%'; p.colorLight = '55%'; }
                         else { p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%'; }
+                    }
+                    else if (options.effect === 'world_grey') {
+                        p.isWorldParticle = true; p.colorHue = 0; p.colorSat = '0%'; p.colorLight = Math.random() * 50 + 20 + '%';
+                    }
+                    else if (options.effect === 'world_color') {
+                        p.isWorldParticle = true; p.colorHue = Math.random() * 360; p.colorSat = '80%'; p.colorLight = '60%';
+                    }
+                    else if (options.isFinalHeart) {
+                        p.colorHue = 340; p.colorSat = '100%'; p.colorLight = '50%';
+                        if (targets[i].isBackgroundHeart) {
+                            p.isHeartParticle = true; // Marcar para latido
+                        }
                     }
                     else {
                         p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%';
                     }
                 } else {
-                    p.targetX = Math.random() * canvas.width; p.targetY = Math.random() * canvas.height; p.targetZ = (Math.random() - 0.5) * 2000;
+                    p.targetX = Math.random() * canvas.width;
+                    p.targetY = Math.random() * canvas.height;
+                    p.targetZ = (Math.random() - 0.5) * 2000;
                     p.colorHue = Math.random() * 40 + 330; p.colorSat = '80%'; p.colorLight = '35%';
                 }
             });
@@ -771,6 +786,16 @@
 
         function animate() {
             ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Calculo del latido (Sine wave)
+            // Velocidad 0.005, Amplitud 0.05 (5%)
+            if (currentState === 'celebration') {
+                const time = Date.now() * 0.003;
+                heartBeatScale = 1 + (Math.sin(time) * 0.05);
+            } else {
+                heartBeatScale = 1;
+            }
+
             particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
