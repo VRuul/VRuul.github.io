@@ -241,6 +241,43 @@
             opacity: 1;
         }
 
+        /* --- UI Regalo --- */
+        #gift-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        #gift-container.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #gift-image {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        #gift-message {
+            font-size: 1.5rem;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+
         .timer-label {
             font-size: 1rem;
             text-transform: uppercase;
@@ -342,6 +379,13 @@
         <div class="timer" id="timer-val">00d 00h 00m 00s</div>
     </div>
 
+    <!-- UI Regalo -->
+    <div id="gift-container">
+        <div id="gift-message">Para ti, con todo mi amor 💜</div>
+        <img id="gift-image" src="assets/album_preview.png" alt="Regalo Especial">
+        <button class="action-btn btn-yes" onclick="location.reload()">Volver al inicio</button>
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas1');
         const ctx = canvas.getContext('2d');
@@ -361,8 +405,11 @@
         const countdownEl = document.getElementById('countdown');
         const timerVal = document.getElementById('timer-val');
 
+        const giftContainer = document.getElementById('gift-container');
+
         let particles = [];
         let currentState = 'intro';
+        let isGiftPath = false;
 
         // --- Configuración Candado ---
         let passcode = [0, 0, 0, 0, 0, 0];
@@ -371,6 +418,8 @@
         const targetMonth = startDate.getMonth() + 1;
         const targetYear = startDate.getFullYear() % 100;
         const correctCode = [Math.floor(targetDay / 10), targetDay % 10, Math.floor(targetMonth / 10), targetMonth % 10, Math.floor(targetYear / 10), targetYear % 10];
+        const valentineCode = [1, 4, 0, 2, 2, 6];
+
         let clickZones = [];
         let currentCorrectDigits = 0;
 
@@ -389,6 +438,16 @@
             { text: "Ese día no solo aceptamos caminar juntos; decidimos que cualquier camino, si es contigo, vale la pena.", time: 7000 },
             { text: `Hoy, <span class="highlight">${diffDays} días después</span>, sigo eligiendo esa misma fecha como el inicio de mi mejor historia.`, time: 7000 }
         ];
+
+        const giftStorySequence = [
+            { text: "A veces las sorpresas llegan cuando menos las esperas...", time: 5000 },
+            { text: "Sé que hay melodías que hacen vibrar tu corazón.", time: 5000 },
+            { text: "Y quería darte algo que te haga sonreír cada vez que lo escuches.", time: 5000, effect: 'world_color' },
+            { text: "Porque ver tu sonrisa es mi canción favorita.", time: 5000 },
+            { text: "Aquí tienes un pequeño adelanto de lo que viene...", time: 5000 }
+        ];
+
+        let currentSequence = storySequence;
 
         let storyIndex = -1;
         let storyTimer = null;
@@ -447,7 +506,7 @@
         });
 
         document.getElementById('next-btn').addEventListener('click', () => {
-            if (storyIndex < storySequence.length - 1) { clearTimeout(storyTimer); storyIndex++; loadStoryScene(storyIndex); }
+            if (storyIndex < currentSequence.length - 1) { clearTimeout(storyTimer); storyIndex++; loadStoryScene(storyIndex); }
             else { clearTimeout(storyTimer); endStoryMode(); }
         });
 
@@ -637,28 +696,43 @@
         }
 
         function checkCode() {
-            let newCorrectCount = 0;
-            passcode.forEach((val, index) => { if (val === correctCode[index]) newCorrectCount++; });
+            let properCodeCount = 0;
+            let valCodeCount = 0;
 
-            if (newCorrectCount === 6) {
-                currentState = 'success';
-                updateBackgroundHeart(6);
-                lockUI.classList.remove('visible');
-                setTimeout(() => {
-                    particles.forEach(p => {
-                        if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = 350; p.colorSat = '100%'; }
-                    });
-                    setTimeout(initStoryMode, 1000);
-                }, 1500);
+            passcode.forEach((val, index) => {
+                if (val === correctCode[index]) properCodeCount++;
+                if (val === valentineCode[index]) valCodeCount++;
+            });
+
+            if (properCodeCount === 6) {
+                isGiftPath = false;
+                startSuccessSequence();
+            } else if (valCodeCount === 6) {
+                isGiftPath = true;
+                startSuccessSequence();
             } else {
-                updateBackgroundHeart(newCorrectCount);
+                // Visual feedback based on best match
+                updateBackgroundHeart(Math.max(properCodeCount, valCodeCount));
             }
+        }
+
+        function startSuccessSequence() {
+            currentState = 'success';
+            updateBackgroundHeart(6);
+            lockUI.classList.remove('visible');
+            setTimeout(() => {
+                particles.forEach(p => {
+                    if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = isGiftPath ? 260 : 350; p.colorSat = '100%'; }
+                });
+                setTimeout(initStoryMode, 1000);
+            }, 1500);
         }
 
         function initStoryMode() {
             currentState = 'story';
+            currentSequence = isGiftPath ? giftStorySequence : storySequence;
             progressContainer.innerHTML = '';
-            storySequence.forEach((_, i) => {
+            currentSequence.forEach((_, i) => {
                 const seg = document.createElement('div');
                 seg.className = 'progress-segment';
                 const fill = document.createElement('div');
@@ -674,14 +748,14 @@
         }
 
         function loadStoryScene(index) {
-            for (let i = 0; i < storySequence.length; i++) {
+            for (let i = 0; i < currentSequence.length; i++) {
                 const fill = document.getElementById(`fill-${i}`);
                 if (i < index) fill.style.width = '100%';
                 else if (i > index) fill.style.width = '0%';
                 else fill.style.width = '0%';
             }
 
-            const scene = storySequence[index];
+            const scene = currentSequence[index];
             storyText.innerHTML = scene.text;
             storyContainer.classList.remove('visible');
             setTimeout(() => { storyContainer.classList.add('visible'); }, 200);
@@ -703,7 +777,7 @@
 
             clearTimeout(storyTimer);
             storyTimer = setTimeout(() => {
-                if (index < storySequence.length - 1) {
+                if (index < currentSequence.length - 1) {
                     storyIndex++;
                     loadStoryScene(storyIndex);
                 } else {
@@ -722,7 +796,25 @@
                 p.targetY = Math.random() * canvas.height;
                 p.isWorldParticle = false;
             });
-            setTimeout(() => { revealBtn.classList.add('visible'); }, 500);
+
+            if (isGiftPath) {
+                setTimeout(showGift, 1000);
+            } else {
+                setTimeout(() => { revealBtn.classList.add('visible'); }, 500);
+            }
+        }
+
+        function showGift() {
+            currentState = 'gift';
+            giftContainer.classList.add('visible');
+
+            // Efecto de partículas para el regalo (azules/moradas)
+            particles.forEach(p => {
+                p.targetZ = (Math.random() - 0.5) * 2000;
+                p.colorHue = Math.random() * 60 + 240; // Azules y morados
+                p.colorSat = '100%';
+                p.colorLight = '60%';
+            });
         }
 
         function showFinalQuestion() {
@@ -799,6 +891,9 @@
                         if (targets[i].isBackgroundHeart) {
                             p.isHeartParticle = true; // Marcar para latido
                         }
+                    }
+                    else if (options.effect === 'gift_path') {
+                        p.colorHue = 210; p.colorSat = '80%'; p.colorLight = '60%';
                     }
                     else {
                         p.colorHue = 0; p.colorSat = '0%'; p.colorLight = '100%';
