@@ -409,7 +409,7 @@
 
         let particles = [];
         let currentState = 'intro';
-        let isGiftPath = false;
+        let currentPath = 'story'; // 'story', 'gift', 'anniversary'
 
         // --- Configuración Candado ---
         let passcode = [0, 0, 0, 0, 0, 0];
@@ -419,6 +419,7 @@
         const targetYear = startDate.getFullYear() % 100;
         const correctCode = [Math.floor(targetDay / 10), targetDay % 10, Math.floor(targetMonth / 10), targetMonth % 10, Math.floor(targetYear / 10), targetYear % 10];
         const valentineCode = [1, 4, 0, 2, 2, 6];
+        const anniversaryCode = [2, 3, 0, 2, 2, 6]; // 23 02 26
 
         let clickZones = [];
         let currentCorrectDigits = 0;
@@ -429,6 +430,13 @@
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const monthsNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         const formattedDateStr = `${startDate.getDate()} de ${monthsNames[startDate.getMonth()]} del ${startDate.getFullYear()}`;
+
+        let years = today.getFullYear() - startDate.getFullYear();
+        let months = today.getMonth() - startDate.getMonth();
+        if (months < 0 || (months === 0 && today.getDate() < startDate.getDate())) {
+            years--;
+            months += 12;
+        }
 
         const storySequence = [
             { text: "Dicen que los días importantes no siempre vienen anunciados con fanfarrias...", time: 6000 },
@@ -445,6 +453,15 @@
             { text: "Y quería darte algo que te haga sonreír cada vez que lo escuches.", time: 5000, effect: 'world_color' },
             { text: "Porque ver tu sonrisa es mi canción favorita.", time: 5000 },
             { text: "Aquí tienes un pequeño adelanto de lo que viene...", time: 5000 }
+        ];
+
+        const anniversaryStorySequence = [
+            { text: "El tiempo pasa volando cuando estás con la persona correcta...", time: 6000 },
+            { text: `Y hoy celebramos exactamente <span class="highlight">${years} años y ${months} meses</span> juntos.`, time: 6000 },
+            { text: "Desde ese 23 de julio, mi vida se llenó de luz y aventuras a tu lado.", time: 6000, effect: 'world_color' },
+            { text: "Cada día contigo es un regalo y una historia que amo contar.", time: 6000 },
+            { text: "Gracias por estos maravillosos momentos y por todo lo que viene.", time: 6000 },
+            { text: "Te elijo hoy, mañana y siempre. ¡Feliz Aniversario! ❤️", time: 7000 }
         ];
 
         let currentSequence = storySequence;
@@ -698,21 +715,26 @@
         function checkCode() {
             let properCodeCount = 0;
             let valCodeCount = 0;
+            let anniCodeCount = 0;
 
             passcode.forEach((val, index) => {
                 if (val === correctCode[index]) properCodeCount++;
                 if (val === valentineCode[index]) valCodeCount++;
+                if (val === anniversaryCode[index]) anniCodeCount++;
             });
 
             if (properCodeCount === 6) {
-                isGiftPath = false;
+                currentPath = 'story';
                 startSuccessSequence();
             } else if (valCodeCount === 6) {
-                isGiftPath = true;
+                currentPath = 'gift';
+                startSuccessSequence();
+            } else if (anniCodeCount === 6) {
+                currentPath = 'anniversary';
                 startSuccessSequence();
             } else {
                 // Visual feedback based on best match
-                updateBackgroundHeart(Math.max(properCodeCount, valCodeCount));
+                updateBackgroundHeart(Math.max(properCodeCount, valCodeCount, anniCodeCount));
             }
         }
 
@@ -722,7 +744,7 @@
             lockUI.classList.remove('visible');
             setTimeout(() => {
                 particles.forEach(p => {
-                    if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = isGiftPath ? 260 : 350; p.colorSat = '100%'; }
+                    if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = (currentPath === 'gift' || currentPath === 'anniversary') ? 260 : 350; p.colorSat = '100%'; }
                 });
                 setTimeout(initStoryMode, 1000);
             }, 1500);
@@ -730,7 +752,13 @@
 
         function initStoryMode() {
             currentState = 'story';
-            currentSequence = isGiftPath ? giftStorySequence : storySequence;
+            if (currentPath === 'gift') {
+                currentSequence = giftStorySequence;
+            } else if (currentPath === 'anniversary') {
+                currentSequence = anniversaryStorySequence;
+            } else {
+                currentSequence = storySequence;
+            }
             progressContainer.innerHTML = '';
             currentSequence.forEach((_, i) => {
                 const seg = document.createElement('div');
@@ -797,7 +825,7 @@
                 p.isWorldParticle = false;
             });
 
-            if (isGiftPath) {
+            if (currentPath === 'gift') {
                 setTimeout(showGift, 1000);
             } else {
                 setTimeout(() => { revealBtn.classList.add('visible'); }, 500);
@@ -819,6 +847,15 @@
 
         function showFinalQuestion() {
             currentState = 'question';
+            if (currentPath === 'anniversary') {
+                document.querySelector('.big-question').innerHTML = '¡Feliz Aniversario mi amor!<br>❤️';
+                btnYes.innerText = "¡Te amo infinitamente!";
+                btnNo.style.display = 'none';
+            } else {
+                document.querySelector('.big-question').innerText = "¿Quieres ser mi San Valentín?";
+                btnYes.innerText = "¡SÍ, QUIERO! ❤️";
+                btnNo.style.display = 'inline-block';
+            }
             questionContainer.classList.remove('hidden');
             setTimeout(() => { questionContainer.classList.add('visible'); }, 100);
 
@@ -850,14 +887,25 @@
             countdownEl.classList.add('visible');
             const updateTimer = () => {
                 const now = new Date();
-                let valentine = new Date(now.getFullYear(), 1, 14);
-                if (now > valentine) valentine = new Date(now.getFullYear() + 1, 1, 14);
-                const diff = valentine - now;
-                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-                const m = Math.floor((diff / 1000 / 60) % 60);
-                const s = Math.floor((diff / 1000) % 60);
-                timerVal.innerText = `${d}d ${h}h ${m}m ${s}s`;
+                if (currentPath === 'anniversary') {
+                    document.querySelector('.timer-label').innerText = "Tiempo juntos de pura felicidad";
+                    const diff = now - startDate;
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                    const m = Math.floor((diff / 1000 / 60) % 60);
+                    const s = Math.floor((diff / 1000) % 60);
+                    timerVal.innerText = `${d}d ${h}h ${m}m ${s}s`;
+                } else {
+                    document.querySelector('.timer-label').innerText = "Solo queda este tiempo para vernos";
+                    let valentine = new Date(now.getFullYear(), 1, 14);
+                    if (now > valentine) valentine = new Date(now.getFullYear() + 1, 1, 14);
+                    const diff = valentine - now;
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                    const m = Math.floor((diff / 1000 / 60) % 60);
+                    const s = Math.floor((diff / 1000) % 60);
+                    timerVal.innerText = `${d}d ${h}h ${m}m ${s}s`;
+                }
             };
             setInterval(updateTimer, 1000);
             updateTimer();
