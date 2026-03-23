@@ -409,7 +409,7 @@
 
         let particles = [];
         let currentState = 'intro';
-        let currentPath = 'story'; // 'story', 'gift', 'anniversary'
+        let currentPath = 'story'; // 'story', 'gift', 'anniversary', 'monthiversary'
 
         // --- Configuración Candado ---
         let passcode = [0, 0, 0, 0, 0, 0];
@@ -420,6 +420,7 @@
         const correctCode = [Math.floor(targetDay / 10), targetDay % 10, Math.floor(targetMonth / 10), targetMonth % 10, Math.floor(targetYear / 10), targetYear % 10];
         const valentineCode = [1, 4, 0, 2, 2, 6];
         const anniversaryCode = [2, 3, 0, 2, 2, 6]; // 23 02 26
+        const monthiversaryCode = [2, 3, 0, 3, 2, 6]; // 23 03 26 (Hoy)
 
         let clickZones = [];
         let currentCorrectDigits = 0;
@@ -462,6 +463,15 @@
             { text: "Cada día contigo es un regalo y una historia que amo contar.", time: 6000 },
             { text: "Gracias por estos maravillosos momentos y por todo lo que viene.", time: 6000 },
             { text: "Te elijo hoy, mañana y siempre. ¡Feliz Aniversario! ❤️", time: 7000 }
+        ];
+
+        const monthiversaryStorySequence = [
+            { text: "Hoy es un día especial porque celebramos un mes más de novios...", time: 6000 },
+            { text: `Otro mes lleno de risas, apoyo y un amor que no deja de crecer.`, time: 6000 },
+            { text: "Parece increíble cómo cada 23 se convierte en mi día favorito del mes.", time: 6000, effect: 'world_color' },
+            { text: "Gracias por hacerme tan feliz y por cada detalle que compartimos.", time: 6000 },
+            { text: "Eres mi persona favorita y no puedo esperar por todos los meses que nos faltan.", time: 6000 },
+            { text: "¡Feliz Cumple Mes, mi amor! ❤️", time: 7000 }
         ];
 
         let currentSequence = storySequence;
@@ -716,11 +726,13 @@
             let properCodeCount = 0;
             let valCodeCount = 0;
             let anniCodeCount = 0;
+            let monthCodeCount = 0;
 
             passcode.forEach((val, index) => {
                 if (val === correctCode[index]) properCodeCount++;
                 if (val === valentineCode[index]) valCodeCount++;
                 if (val === anniversaryCode[index]) anniCodeCount++;
+                if (val === monthiversaryCode[index]) monthCodeCount++;
             });
 
             if (properCodeCount === 6) {
@@ -732,9 +744,12 @@
             } else if (anniCodeCount === 6) {
                 currentPath = 'anniversary';
                 startSuccessSequence();
+            } else if (monthCodeCount === 6) {
+                currentPath = 'monthiversary';
+                startSuccessSequence();
             } else {
                 // Visual feedback based on best match
-                updateBackgroundHeart(Math.max(properCodeCount, valCodeCount, anniCodeCount));
+                updateBackgroundHeart(Math.max(properCodeCount, valCodeCount, anniCodeCount, monthCodeCount));
             }
         }
 
@@ -744,7 +759,7 @@
             lockUI.classList.remove('visible');
             setTimeout(() => {
                 particles.forEach(p => {
-                    if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = (currentPath === 'gift' || currentPath === 'anniversary') ? 260 : 350; p.colorSat = '100%'; }
+                    if (p.colorSat === '0%') { p.targetZ -= 800; p.colorHue = (currentPath === 'gift' || currentPath === 'anniversary' || currentPath === 'monthiversary') ? 260 : 350; p.colorSat = '100%'; }
                 });
                 setTimeout(initStoryMode, 1000);
             }, 1500);
@@ -756,6 +771,8 @@
                 currentSequence = giftStorySequence;
             } else if (currentPath === 'anniversary') {
                 currentSequence = anniversaryStorySequence;
+            } else if (currentPath === 'monthiversary') {
+                currentSequence = monthiversaryStorySequence;
             } else {
                 currentSequence = storySequence;
             }
@@ -851,6 +868,10 @@
                 document.querySelector('.big-question').innerHTML = '¡Feliz Aniversario mi amor!<br>❤️';
                 btnYes.innerText = "¡Te amo infinitamente!";
                 btnNo.style.display = 'none';
+            } else if (currentPath === 'monthiversary') {
+                document.querySelector('.big-question').innerHTML = '¡Feliz Cumple Mes!<br>❤️';
+                btnYes.innerText = "¡Te amo cada día más!";
+                btnNo.style.display = 'none';
             } else {
                 document.querySelector('.big-question').innerText = "¿Quieres ser mi San Valentín?";
                 btnYes.innerText = "¡SÍ, QUIERO! ❤️";
@@ -887,7 +908,7 @@
             countdownEl.classList.add('visible');
             const updateTimer = () => {
                 const now = new Date();
-                if (currentPath === 'anniversary') {
+                if (currentPath === 'anniversary' || currentPath === 'monthiversary') {
                     document.querySelector('.timer-label').innerText = "Tiempo juntos de pura felicidad";
                     const diff = now - startDate;
                     const d = Math.floor(diff / (1000 * 60 * 60 * 24));
